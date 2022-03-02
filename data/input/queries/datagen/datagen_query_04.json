@@ -1,0 +1,27 @@
+{
+  "aggregate":"query-invoices-updating-timesheets",
+  "pipeline":[
+	  {
+		"$project": {
+		  "_id": "{$PROJECT_ID}", 
+		  "item.ref-timesheet": "{$TIMESHEET_ID}"
+		}
+	  }, {
+		"$unwind": {
+		  "path": "$item", 
+		  "includeArrayIndex": "string", 
+		  "preserveNullAndEmptyArrays": false
+		}
+	  }, {
+		"$replaceRoot": {
+		  "newRoot": "$item"
+		}
+	  }, {
+		"$limit": 10
+	  }
+	],
+  "collection": "invoices",
+  "allowDiskUse":true,
+  "maxTimeMS":0,
+  "cursor":{}
+}

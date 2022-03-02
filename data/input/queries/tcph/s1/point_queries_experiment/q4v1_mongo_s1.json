@@ -1,0 +1,15 @@
+{
+  "aggregate": "scale1",
+  "pipeline": [
+    {
+      "$match": {
+        "c_acctbal": {
+          "$lt": -10
+        }
+      }
+    }
+  ],
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}

@@ -1,0 +1,14 @@
+{
+  "aggregate":"test-aggregation-from-file",
+  "pipeline":[
+    {
+      "$match":{
+        "field": 0
+      }
+    }
+  ],
+  "collection": "test_collection",
+  "allowDiskUse":true,
+  "maxTimeMS":0,
+  "cursor":{}
+}

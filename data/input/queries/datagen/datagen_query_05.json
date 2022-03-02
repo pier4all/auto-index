@@ -1,0 +1,63 @@
+{
+  "aggregate":"query-invoices",
+  "pipeline":[
+	  {
+		"$group": {
+		  "_id": "$_id.ref-project", 
+		  "hours": {
+			"$sum": "$hours"
+		  }, 
+		  "amount": {
+			"$sum": "$amount"
+		  }
+		}
+	  }, {
+		"$sort": {
+		  "amount": -1
+		}
+	  }, {
+		"$limit": 10
+	  }, {
+		"$lookup": {
+		  "from": "projects", 
+		  "localField": "_id", 
+		  "foreignField": "_id", 
+		  "as": "project"
+		}
+	  }, {
+		"$lookup": {
+		  "from": "employees", 
+		  "localField": "project.ref-employee", 
+		  "foreignField": "_id", 
+		  "as": "employee"
+		}
+	  }, {
+		"$addFields": {
+			"project_name": {
+				"$arrayElemAt": ["$project.title", 0]
+			},
+			"project_manager": {
+				"lastname": {
+				"$arrayElemAt": ["$employee.lastname", 0]
+				},
+				"firstname": {
+				"$arrayElemAt": ["$employee.firstname", 0]
+				}
+			}
+		}
+	  }, {
+		"$project": {
+		  "project_name": 1, 
+		  "project_manager": 1, 
+		  "service_hours": "$hours", 
+		  "totally_invoiced": "$amount"
+		}
+	  }
+	],
+  "collection": "invoices",
+  "allowDiskUse":true,
+  "maxTimeMS":0,
+  "cursor":{
+    
+  }
+}

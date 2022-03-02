@@ -1,0 +1,18 @@
+{
+  "aggregate":"test-aggregation-no-coll",
+  "pipeline":[
+    {
+      "$match":{
+        "name": "Carpet"
+      }
+    },
+    {
+      "$sort":{
+        "price": 1
+      }
+    }
+  ],
+  "allowDiskUse":true,
+  "maxTimeMS":0,
+  "cursor":{}
+}

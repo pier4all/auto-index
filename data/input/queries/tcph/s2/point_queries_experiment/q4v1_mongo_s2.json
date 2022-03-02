@@ -1,0 +1,15 @@
+{
+  "aggregate": "customer",
+  "pipeline": [
+    {
+      "$match": {
+        "c_acctbal": {
+          "$lt": -10
+        }
+      }
+    }
+  ],
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}

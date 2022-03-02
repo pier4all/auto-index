@@ -1,0 +1,53 @@
+{
+  "aggregate":"aggregate-timesheets-by-project",
+  "pipeline":[
+    {
+      "$match":{
+        "ref-project": "{$PROJECT_ID}"
+      }
+    },
+    {
+      "$addFields":{
+        "price":{
+          "$round":[
+            {
+              "$multiply":[
+                "$quantity",
+                "{$QUANTITY}"
+              ]
+            },
+            1
+          ]
+        }
+      }
+    },
+    {
+      "$group":{
+        "_id":{
+          "project":"$ref-project",
+          "year":{
+            "$year":"$date"
+          },
+          "month":{
+            "$month":"$date"
+          }
+        },
+        "item":{
+          "$push":{
+            "ref-timesheet":"$_id",
+            "quantity":"$quantity",
+            "price":"$price",
+            "date":"$date"
+          }
+        },
+        "amount":{
+          "$sum":"$price"
+        }
+      }
+    }
+  ],
+  "collection": "timesheets",
+  "allowDiskUse":true,
+  "maxTimeMS":0,
+  "cursor":{}
+}
