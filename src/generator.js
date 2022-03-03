@@ -3,6 +3,9 @@ const util = require("./util")
 
 // Following: https://docs.mongodb.com/manual/core/aggregation-pipeline-optimization/#improve-performance-with-indexes-and-document-filters
 
+// move later to commons/const
+// operators that change the syntax
+const LOGIC_OPS = ["$or", "$and", "$nor"]
 class Generator {
   constructor() {
     // leave it for options
@@ -46,7 +49,7 @@ class Generator {
     }
   }
 
-  getMatchIndex(operator, stage, order, sequence, aggregation, name){
+  getMatchIndex(operator, stage, order, sequence, aggregation, name) {
 
     // $match can use an index to filter documents if $match is the first stage in a pipeline or 
     // if the previous ones are of a type that is moved for later by mongo.
@@ -61,34 +64,45 @@ class Generator {
 
     const elementDict = stage[operator]
 
-    // operators that change the syntax
-    const logicOperators = ["$or", "$and", "$nor"]
-
     let indexKey = {}
     // loop over match stage elements
-    Object.keys(elementDict).forEach(function(key, index) {
-      if (!logicOperators.includes(key)) {
+    for (const [key, index] of Object.entries(elementDict)) {
+      if (!LOGIC_OPS.includes(key)) {
         if (!key.startsWith('$')){
           indexKey[key] = 1          
         }
       } else {
         //deal with logical operator clauses
         /* TODO: write a proper recursive function */ 
-        let logicParams = elementDict[key]
-        for (let logicParam of logicParams){
-          Object.keys(logicParam).forEach(function(param, pos) {
-            if (!param.startsWith('$')){
-              indexKey[param] = 1          
-            }
-          })
-        }
+        const logicIndex = this.processLogicalOperator(elementDict[key])
+        Object.keys(logicIndex).forEach(function(field, pos) {
+              indexKey[field] = 1          
+        })      
       }
-    })
+    }
 
-    // simple fields
-    return new Index(name, indexKey, aggregation.collection, {} )
+    // return fields index
+    return new Index(name, indexKey, aggregation.collection, "$match", order, {} )
   }
 
+  processLogicalOperator(params) {
+    let logicfields = {}
+    for (let logicParam of params){
+      for (const [param, index] of Object.entries(logicParam)) {
+        if (!param.startsWith('$')){
+          logicfields[param] = 1          
+        } else {
+          if (LOGIC_OPS.includes(param)) {
+            const logicIndex = this.processLogicalOperator(logicParam[param])
+            Object.keys(logicIndex).forEach(function(field, pos) {
+              logicfields[field] = 1          
+            })      
+          }
+        }
+      }
+    }
+    return logicfields
+  }
 }
 
 

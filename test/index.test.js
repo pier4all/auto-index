@@ -15,25 +15,28 @@ tap.before(async function() {
 tap.test('export an index to json string', async (childTest) => {
   const key = { "l_shipdate": 1, "l_discount": 1, "l_quantity": 1 }
   const options = { "unique": false }
-  const indexOne = new Index("idx_lineitem_a", key, "lineitem", options) 
+  const indexOne = new Index("idx_lineitem_a", key, "lineitem", '$match', 5, options) 
   
-    childTest.equal(JSON.stringify(indexOne.toMongoJSON()), JSON.stringify(jsonOne))
+  childTest.equal(JSON.stringify(indexOne.toMongoJSON()), JSON.stringify(jsonOne))
+  childTest.equal(indexOne.operator, '$match')
+  childTest.equal(indexOne.order, 5)
   
-    childTest.end()
+  childTest.end()
 })
 
 tap.test('export an empty index to json string', async (childTest) => {
 
-  const indexBlank = new Index() 
+    const indexBlank = new Index() 
   
     childTest.equal(JSON.stringify(indexBlank.toMongoJSON()), JSON.stringify(jsonBlank))
-  
+    childTest.equal(indexBlank.operator, '')
+    childTest.equal(indexBlank.order, 0)
     childTest.end()
 })
 
 
-  // test cleanup
-  tap.teardown(async function() { 
+// test cleanup
+tap.teardown(async function() { 
 
-  })
+})
   

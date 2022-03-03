@@ -1,8 +1,10 @@
 class Index {
-  constructor(name = "", key = {}, collection = "", options = {}) {
+  constructor(name = "", key = {}, collection = "", operator = "", order = 0, options = {}) {
     this.name = name;
     this.key = key;
     this.collection = collection;
+    this.operator = operator;
+    this.order = order;
     this.options = options;
   }
 
