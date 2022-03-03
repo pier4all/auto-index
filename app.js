@@ -5,14 +5,16 @@ function main() {
   const Generator = require('./src/generator')
 
   //const inputQueries = ["./data/input/queries/datagen"] //process.argv[1]
-  const inputQueries = [
-                        "./data/input/queries/datagen",
-                        "./data/input/queries/tpch/s1/point_queries_experiment",
-                        "./data/input/queries/tpch/s1/tpch_experiment",
-                        "./data/input/queries/tpch/s2/point_queries_experiment",
-                        "./data/input/queries/tpch/s2/tpch_experiment",
-                        "./data/input/queries/tpch/s3/point_queries_experiment",
-                        "./data/input/queries/tpch/s3/tpch_experiment",] //process.argv[1]
+  const inputQueries = ["./data/input/queries/custom"] //process.argv[1]
+  // const inputQueries = [
+  //                       "./data/input/queries/custom",
+  //                       "./data/input/queries/datagen",
+  //                       "./data/input/queries/tpch/s1/point_queries_experiment",
+  //                       "./data/input/queries/tpch/s1/tpch_experiment",
+  //                       "./data/input/queries/tpch/s2/point_queries_experiment",
+  //                       "./data/input/queries/tpch/s2/tpch_experiment",
+  //                       "./data/input/queries/tpch/s3/point_queries_experiment",
+  //                       "./data/input/queries/tpch/s3/tpch_experiment",] //process.argv[1]
 
     let queries = []
     console.log()
@@ -27,21 +29,22 @@ function main() {
 
     }
 
-    console.log(" - Read " + queries.length + " queries")
+    console.log(" - Read ", queries.length, " queries\n")
 
     const generator = new Generator()
     let indexeResult = generator.generate(queries)
 
+    let totalIndexes = 0
     for (const [key, index] of Object.entries(indexeResult)) {
       
-      console.log("\n" + key + ": ")
-      console.log(" - Generated " + indexeResult[key].length + " indexes: ")
-
+      console.log(" - " + key +" (" + indexeResult[key].length + " indexes): ")
+      totalIndexes += indexeResult[key].length
       for (let index of indexeResult[key]){
         console.log("\t * ", JSON.stringify(index.toMongoJSON()))
       }
     }
 
+    console.log("Total Indexes: ", totalIndexes)
     console.log()
 
   }
