@@ -6,6 +6,7 @@ const util = require("./util")
 // move later to commons/const
 // operators that change the syntax
 const LOGIC_OPS = ["$or", "$and", "$nor"]
+const COMPARISON_OPS = ['$cmp', '$eq', '$gt', '$gte', '$lt', '$lte', '$ne']
 class Generator {
   constructor() {
     // leave it for options
@@ -77,16 +78,33 @@ class Generator {
     let indexKey = {}
     // loop over match stage elements
     for (const [key, index] of Object.entries(elementDict)) {
-      if (!LOGIC_OPS.includes(key)) {
-        if (!key.startsWith('$')){
-          indexKey[key] = 1          
-        }
+      if (!key.startsWith('$')){
+        indexKey[key] = 1          
       } else {
-        //deal with logical operator clauses
-        const logicIndex = this.processLogicalOperator(elementDict[key])
-        Object.keys(logicIndex).forEach(function(field, pos) {
-              indexKey[field] = 1          
-        })      
+        if (LOGIC_OPS.includes(key)) {
+          //deal with logical operator clauses
+          const logicIndex = this.processLogicalOperator(elementDict[key])
+          Object.keys(logicIndex).forEach(function(field, pos) {
+                indexKey[field] = 1          
+          })  
+        }  else {
+          // expressions { $expr: { $gt: [ "$spent" , "$budget" ] } }
+          if (key === '$expr'){
+            let exprOp = Object.keys(elementDict[key])[0]
+            // Check if it is a compariso operator
+            // TODO: check other types of operators
+            if (COMPARISON_OPS.includes(exprOp)) {
+              let comparisonFields = elementDict[key][exprOp]
+              for (let compField of comparisonFields) {
+                if (String(compField).startsWith('$')){
+                  indexKey[compField.replace('$', '')] = 1  
+                  // only add the first element
+                  break
+                }
+              }
+            }
+          }
+        }
       }
     }
 
@@ -110,7 +128,7 @@ class Generator {
             Object.keys(logicIndex).forEach(function(field, pos) {
               logicfields[field] = 1          
             })      
-          }
+          } 
         }
       }
     }

@@ -1,0 +1,14 @@
+{
+  "aggregate":"custom-03",
+  "pipeline":[
+    { "$match":
+      {
+        "$expr": {"$eq": ["$username", "lucia.espona@fhnw.ch"]}
+      }
+    }
+  ],
+  "collection": "figures",
+  "allowDiskUse":true,
+  "maxTimeMS":0,
+  "cursor":{}
+}

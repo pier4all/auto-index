@@ -84,6 +84,22 @@ tap.test('generate indexes for match stage with logic operations', async (childT
   childTest.end()
 })
 
+tap.test('generate indexes for match stage with comparison expression', async (childTest) => {
+  const aggregation = Aggregation.fromJSON(jsonAggLogic)
+  const generator = new Generator()
+
+  // less sort fields than in the group compound fields
+  aggregation.pipeline = [{"$match":{"$expr": { "$eq" : ["admin", "$username"]}}}, {"$match":{"$expr": { "$unknown_op" : ["test", "$test"]}}}]
+  const indexes1 = generator.generateIndexes(aggregation)
+  childTest.equal(indexes1.length, 1)
+  childTest.equal(indexes1[0].operator, "$match")
+
+  const expectedIndex = {"name":"test_logic_test_collection_match_0","key":{"username": 1,},"collection":"test_collection","operator": '$match', "order": 0,"options":{}} 
+
+  childTest.equal(JSON.stringify(indexes1[0]), JSON.stringify(expectedIndex))
+  childTest.end()
+})
+
 tap.test('generate index for valid sort stage', async (childTest) => {
   const aggregation = Aggregation.fromJSON(jsonAggSort)
   const order = 0
