@@ -11,32 +11,39 @@ class Generator {
     // leave it for options
   }
 
-  generateIndexes(aggregations) {
+  generate(aggregations) {
+
+    let result = {}
+
+    for (let aggregation of aggregations) {
+      result[aggregation.name] = this.generateIndexes(aggregation) 
+    }
+    return result
+  }
+
+  generateIndexes(aggregation) {
 
     let indexes = []
 
-    for (const aggregation of aggregations){
+    const operatorSeq = aggregation.pipeline.map(util.getAggregationStageOperator); 
 
-      const operatorSeq = aggregation.pipeline.map(util.getAggregationStageOperator); 
+    let baseCollection = aggregation.collection
 
-      let baseCollection = aggregation.collection
+    let stepNum = 0
+    for (const stage of aggregation.pipeline){
 
-      let stepNum = 0
-      for (const stage of aggregation.pipeline){
-
-        const operator = util.getAggregationStageOperator(stage)
-        let name = aggregation.name + '_' + baseCollection + '_' + operator.replace('$', '') + '_' + stepNum
-        
-        let index = this.getStageIndex(operator, stage, stepNum, operatorSeq, aggregation, name) 
-        if (index) {
-          indexes.push(index)  
-        }
-        
-        //increase index number
-        stepNum += 1
+      const operator = util.getAggregationStageOperator(stage)
+      let name = aggregation.name + '_' + baseCollection + '_' + operator.replace('$', '') + '_' + stepNum
+      
+      let index = this.getStageIndex(operator, stage, stepNum, operatorSeq, aggregation, name) 
+      if (index) {
+        indexes.push(index)  
       }
+      
+      //increase index number
+      stepNum += 1
     }
-
+    
     return indexes
   }
 

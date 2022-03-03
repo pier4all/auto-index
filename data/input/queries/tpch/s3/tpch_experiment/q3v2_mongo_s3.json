@@ -1,42 +1,37 @@
 {
-  "aggregate": "orders",
+  "aggregate": "s3-tpch-q3v2-customer",
   "pipeline": [
     {
       "$match": {
-        "o_orderdate": {
+        "c_mktsegment": "AUTOMOBILE"
+      }
+    },
+    {
+      "$lookup": {
+        "from": "orders-lineitem",
+        "localField": "_id",
+        "foreignField": "o_custkey",
+        "as": "orders"
+      }
+    },
+    {
+      "$unwind": "$orders"
+    },
+    {
+      "$match": {
+        "orders.o_orderdate": {
           "$lt": "ISODate('1992-01-02T00:00:00Z')"
         }
       }
     },
     {
-      "$lookup": {
-        "from": "customer",
-        "localField": "o_custkey",
-        "foreignField": "_id",
-        "as": "customer"
-      }
-    },
-    {
-      "$match": {
-        "customer.c_mktsegment": "AUTOMOBILE"
-      }
-    },
-    {
-      "$lookup": {
-        "from": "lineitem",
-        "localField": "_id",
-        "foreignField": "_id.l_orderkey",
-        "as": "lineitems"
-      }
-    },
-    {
       "$project": {
-        "_id": 1,
-        "o_orderdate": 1,
-        "o_shippriority": 1,
+        "o_orderkey": "$orders._id",
+        "o_orderdate": "$orders.o_orderdate",
+        "o_shippriority": "$orders.o_shippriority",
         "lineitems": {
           "$filter": {
-            "input": "$lineitems",
+            "input": "$orders.o_lineitems",
             "as": "l",
             "cond": {
               "$gt": [
@@ -54,7 +49,7 @@
     {
       "$group": {
         "_id": {
-          "l_orderkey": "$_id",
+          "l_orderkey": "$o_orderkey",
           "o_orderdate": "$o_orderdate",
           "o_shippriority": "$o_shippriority"
         },

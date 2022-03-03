@@ -1,30 +1,32 @@
 {
-  "aggregate": "scale1",
+  "aggregate": "s3-tpch-q3v1-orders-lineitem",
   "pipeline": [
     {
       "$match": {
-        "c_mktsegment": "AUTOMOBILE",
-        "c_orders.o_lineitems.l_shipdate": {
-          "$gt": "ISODate('1992-01-02T00:00:00Z')"
-        }
-      }
-    },
-    {
-      "$unwind": "$c_orders"
-    },
-    {
-      "$match": {
-        "c_orders.o_orderdate": {
+        "o_orderdate": {
           "$lt": "ISODate('1992-01-02T00:00:00Z')"
         }
       }
     },
     {
+      "$lookup": {
+        "from": "customer",
+        "localField": "o_custkey",
+        "foreignField": "_id",
+        "as": "customer"
+      }
+    },
+    {
+      "$match": {
+        "customer.c_mktsegment": "AUTOMOBILE"
+      }
+    },
+    {
       "$project": {
-        "o_orderkey": "$c_orders.o_orderkey",
-        "o_orderdate": "$c_orders.o_orderdate",
-        "o_shippriority": "$c_orders.o_shippriority",
-        "lineitems": "$c_orders.o_lineitems"
+        "_id": 1,
+        "o_orderdate": 1,
+        "o_shippriority": 1,
+        "lineitems": "$o_lineitems"
       }
     },
     {
@@ -40,7 +42,7 @@
     {
       "$group": {
         "_id": {
-          "l_orderkey": "$o_orderkey",
+          "l_orderkey": "$_id",
           "o_orderdate": "$o_orderdate",
           "o_shippriority": "$o_shippriority"
         },

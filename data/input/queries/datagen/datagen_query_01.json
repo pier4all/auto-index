@@ -1,5 +1,5 @@
 {
-  "aggregate":"aggregate-timesheets-by-project",
+  "aggregate":"datagen-01-aggregate-timesheets-by-project",
   "pipeline":[
     {
       "$match":{

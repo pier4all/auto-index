@@ -1,5 +1,5 @@
 {
-  "aggregate": "scale1",
+  "aggregate": "s2-tpch-q22-customer",
   "pipeline": [
     {
       "$match": {
@@ -51,8 +51,16 @@
     },
     {
       "$lookup": {
-        "from": "scale1",
+        "from": "customer",
         "pipeline": [
+          {
+            "$lookup": {
+              "from": "orders",
+              "localField": "_id",
+              "foreignField": "o_custkey",
+              "as": "c_orders"
+            }
+          },
           {
             "$match": {
               "c_acctbal": {
@@ -110,16 +118,22 @@
     },
     {
       "$group": {
-	"_id": "$c_acctbals.cntrycode",
-	"numcust": {
-      "$sum": 1},
-	"totacctbal": {
-      "$sum": "$c_acctbals.c_acctbal"}
-    }},
+        "_id": "$c_acctbals.cntrycode",
+        "numcust": {
+          "$sum": 1
+        },
+        "totacctbal": {
+          "$sum": "$c_acctbals.c_acctbal"
+        }
+      }
+    },
     {
-      "$sort": {"_id": 1}}
-],
-	"allowDiskUse": true,
-	"maxTimeMS": 0,
+      "$sort": {
+        "_id": 1
+      }
+    }
+  ],
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
   "cursor": {}
 }

@@ -1,5 +1,5 @@
 {
-  "aggregate":"query-invoices-updating-timesheets",
+  "aggregate":"datagen-04-query-invoices-updating-timesheets",
   "pipeline":[
 	  {
 		"$project": {

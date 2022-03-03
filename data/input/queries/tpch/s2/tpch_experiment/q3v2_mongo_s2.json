@@ -1,5 +1,5 @@
 {
-  "aggregate": "scale1",
+  "aggregate": "s2-tpch-q3v2-customer",
   "pipeline": [
     {
       "$match": {
@@ -7,32 +7,52 @@
       }
     },
     {
-      "$unwind": "$c_orders"
+      "$lookup": {
+        "from": "orders",
+        "localField": "_id",
+        "foreignField": "o_custkey",
+        "as": "orders"
+      }
+    },
+    {
+      "$unwind": "$orders"
     },
     {
       "$match": {
-        "c_orders.o_orderdate": {
+        "orders.o_orderdate": {
           "$lt": "ISODate('1992-01-02T00:00:00Z')"
         }
       }
     },
     {
+      "$lookup": {
+        "from": "lineitem",
+        "localField": "orders._id",
+        "foreignField": "_id.l_orderkey",
+        "as": "lineitems"
+      }
+    },
+    {
       "$project": {
-        "o_orderkey": "$c_orders.o_orderkey",
-        "o_orderdate": "$c_orders.o_orderdate",
-        "o_shippriority": "$c_orders.o_shippriority",
-        "lineitems": "$c_orders.o_lineitems"
+        "o_orderkey": "$orders._id",
+        "o_orderdate": "$orders.o_orderdate",
+        "o_shippriority": "$orders.o_shippriority",
+        "lineitems": {
+          "$filter": {
+            "input": "$lineitems",
+            "as": "l",
+            "cond": {
+              "$gt": [
+                "$$l.l_shipdate",
+                "ISODate('1992-01-02T00:00:00Z')"
+              ]
+            }
+          }
+        }
       }
     },
     {
       "$unwind": "$lineitems"
-    },
-    {
-      "$match": {
-        "lineitems.l_shipdate": {
-          "$gt": "ISODate('1992-01-02T00:00:00Z')"
-        }
-      }
     },
     {
       "$group": {

@@ -1,5 +1,5 @@
 {
-  "aggregate":"mat-view-invoices",
+  "aggregate":"datagen-03-mat-view-invoices",
   "pipeline":[
           {
             "$match": {

@@ -1,5 +1,5 @@
 {
-  "aggregate": "customer",
+  "aggregate": "s3-tpch-q22-customer",
   "pipeline": [
     {
       "$match": {
@@ -55,7 +55,7 @@
         "pipeline": [
           {
             "$lookup": {
-              "from": "orders",
+              "from": "orders-lineitem",
               "localField": "_id",
               "foreignField": "o_custkey",
               "as": "c_orders"

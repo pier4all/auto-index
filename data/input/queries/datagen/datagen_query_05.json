@@ -1,5 +1,5 @@
 {
-  "aggregate":"query-invoices",
+  "aggregate":"datagen-05-query-invoices",
   "pipeline":[
 	  {
 		"$group": {

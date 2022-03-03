@@ -1,5 +1,5 @@
 {
-  "aggregate":"aggregate-timesheets",
+  "aggregate":"datagen-02-aggregate-timesheets",
   "pipeline":[
     {
       "$addFields":{

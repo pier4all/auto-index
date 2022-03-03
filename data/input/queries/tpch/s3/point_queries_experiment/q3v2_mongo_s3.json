@@ -1,9 +1,9 @@
 {
-  "aggregate": "customer",
+  "aggregate": "s3-tpch-q3v2-customer",
   "pipeline": [
     {
       "$lookup": {
-        "from": "orders",
+        "from": "orders-lineitem",
         "localField": "_id",
         "foreignField": "o_custkey",
         "as": "orders"

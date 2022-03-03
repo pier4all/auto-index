@@ -7,12 +7,12 @@ function main() {
   //const inputQueries = ["./data/input/queries/datagen"] //process.argv[1]
   const inputQueries = [
                         "./data/input/queries/datagen",
-                        "./data/input/queries/tcph/s1/point_queries_experiment",
-                        "./data/input/queries/tcph/s1/tpch_experiment",
-                        "./data/input/queries/tcph/s2/point_queries_experiment",
-                        "./data/input/queries/tcph/s2/tpch_experiment",
-                        "./data/input/queries/tcph/s3/point_queries_experiment",
-                        "./data/input/queries/tcph/s3/tpch_experiment",] //process.argv[1]
+                        "./data/input/queries/tpch/s1/point_queries_experiment",
+                        "./data/input/queries/tpch/s1/tpch_experiment",
+                        "./data/input/queries/tpch/s2/point_queries_experiment",
+                        "./data/input/queries/tpch/s2/tpch_experiment",
+                        "./data/input/queries/tpch/s3/point_queries_experiment",
+                        "./data/input/queries/tpch/s3/tpch_experiment",] //process.argv[1]
 
     let queries = []
     console.log()
@@ -30,12 +30,16 @@ function main() {
     console.log(" - Read " + queries.length + " queries")
 
     const generator = new Generator()
-    let indexes = generator.generateIndexes(queries)
+    let indexeResult = generator.generate(queries)
 
-    console.log(" - Generated " + indexes.length + " indexes: ")
+    for (const [key, index] of Object.entries(indexeResult)) {
+      
+      console.log("\n" + key + ": ")
+      console.log(" - Generated " + indexeResult[key].length + " indexes: ")
 
-    for (let index of indexes){
-      console.log(JSON.stringify(index.toMongoJSON()))
+      for (let index of indexeResult[key]){
+        console.log("\t * ", JSON.stringify(index.toMongoJSON()))
+      }
     }
 
     console.log()

@@ -23,8 +23,11 @@ tap.test('generate indexes for aggregation list', async (childTest) => {
   
   const generator = new Generator()
 
-  const indexes = generator.generateIndexes([aggOne, aggTwo, aggNoIndex])
-  childTest.equal(indexes.length, 2)
+  const result = generator.generate([aggOne, aggTwo, aggNoIndex])
+
+  childTest.equal(result["test1"].length, 1)
+  childTest.equal(result["test2"].length, 1)
+  childTest.equal(result["test_no_index"].length, 0)
 
   childTest.end()
 })
