@@ -148,6 +148,7 @@ tap.test('generate no index for group stages with previous unwind', async (child
 
   const indexes = generator.generateIndexes(aggregation)
 
+  // returns one sort index
   childTest.equal(indexes.length, 0)
   childTest.end()
 })
@@ -159,7 +160,29 @@ tap.test('generate no index for group stages with no suitable previous sort', as
 
   const indexes = generator.generateIndexes(aggregation)
 
-  childTest.equal(indexes.length, 0)
+  childTest.equal(indexes.length, 1)
+  childTest.equal(indexes[0].operator, "$sort")
+  childTest.end()
+})
+
+tap.test('group stage corner cases', async (childTest) => {
+  const jsonAggGroupCorner = '{ "aggregate": "test_group_corner", "collection": "test_collection", "pipeline": []}'
+  const aggregation = Aggregation.fromJSON(jsonAggGroupCorner)
+  const generator = new Generator()
+
+  // less sort fields than in the group compound fields
+  aggregation.pipeline = [{"$sort": { "x" : 1, "y": 1}}, {"$group": {"_id": { "x" : "$x", "y": "$y" },"z": { "$first" : "$z" }}}]
+  const indexes1 = generator.generateIndexes(aggregation)
+  childTest.equal(indexes1.length, 1)
+  childTest.equal(indexes1[0].operator, "$sort")
+
+  // not valid operator in the group compound fields
+  aggregation.pipeline = [{"$sort": { "x" : 1, "y": 1}}, {"$group": {"_id": { "x" : "$x"},"y": { "$sum" : "$y" }}}]
+  const indexes2 = generator.generateIndexes(aggregation)
+  childTest.equal(indexes2.length, 1)
+  childTest.equal(indexes2[0].operator, "$sort")
+  
+
   childTest.end()
 })
 

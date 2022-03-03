@@ -227,10 +227,8 @@ class Generator {
     let adaptedSortStage = aggregation.pipeline[previousSortOrder]
     adaptedSortStage['$sort'] = validSortFields
     let sortIndex = this.getSortIndex("$sort", adaptedSortStage, previousSortOrder, sequence, aggregation, name)
-    if (sortIndex) {
-      sortIndex.order = order
-      sortIndex.operator = operator
-    }
+    sortIndex.order = order
+    sortIndex.operator = operator
     return sortIndex
   }
 
