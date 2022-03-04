@@ -130,14 +130,18 @@ tap.test('generate no index for sort stage after group', async (childTest) => {
   childTest.end()
 })
 
-tap.test('generate no index for group stages with no previous sort', async (childTest) => {
+tap.test('generate index for group stages with no previous sort', async (childTest) => {
   const aggregation = Aggregation.fromJSON(jsonAggGroup1)
    
   const generator = new Generator()
 
   const indexes = generator.generateIndexes(aggregation)
 
-  childTest.equal(indexes.length, 0)
+  childTest.equal(indexes.length, 1)
+
+  const expectedIndex = {"name":"test_group1_test_collection_group_0", "key":{"x": 1, "y": 1}, "collection":"test_collection", "operator": '$group', "order": 0, "options":{}} 
+  childTest.equal(JSON.stringify(indexes[0]), JSON.stringify(expectedIndex))
+
   childTest.end()
 })
 
@@ -152,8 +156,8 @@ tap.test('generate index for group stage with previous suitable sort', async (ch
   const index = generator.getGroupIndex("$group", stage, order, sequence, aggregation, "test_index")
 
   const expectedIndex = {"name":"test_index", "key":{"x": 1, "y": 1}, "collection":"test_collection", "operator": '$group', "order": order, "options":{}} 
-
   childTest.equal(JSON.stringify(index), JSON.stringify(expectedIndex))
+
   childTest.end()
 })
 
@@ -187,18 +191,35 @@ tap.test('group stage corner cases', async (childTest) => {
   const generator = new Generator()
 
   // less sort fields than in the group compound fields
-  aggregation.pipeline = [{"$sort": { "x" : 1, "y": 1}}, {"$group": {"_id": { "x" : "$x", "y": "$y" },"z": { "$first" : "$z" }}}]
+  aggregation.pipeline = [{"$sort": { "x" : 1}}, {"$group": {"_id": { "x" : "$x", "y": "$y" },"z": { "$first" : "$z" }}}]
   const indexes1 = generator.generateIndexes(aggregation)
-  childTest.equal(indexes1.length, 1)
+  childTest.equal(indexes1.length, 2)
   childTest.equal(indexes1[0].operator, "$sort")
+  childTest.equal(indexes1[1].operator, "$group")
+  
+  const expectedIndex1 = {"name":"test_group_corner_test_collection_group_1", "key":{"x": 1, "y": 1, "z": 1}, "collection":"test_collection", "operator": '$group', "order": 1, "options":{}} 
+  childTest.equal(JSON.stringify(indexes1[1]), JSON.stringify(expectedIndex1))
 
   // not valid operator in the group compound fields
   aggregation.pipeline = [{"$sort": { "x" : 1, "y": 1}}, {"$group": {"_id": { "x" : "$x"},"y": { "$sum" : "$y" }}}]
   const indexes2 = generator.generateIndexes(aggregation)
-  childTest.equal(indexes2.length, 1)
+  childTest.equal(indexes2.length, 2)
   childTest.equal(indexes2[0].operator, "$sort")
+  childTest.equal(indexes2[1].operator, "$group")
   
+  const expectedIndex2 = {"name":"test_group_corner_test_collection_group_1", "key":{"x": 1}, "collection":"test_collection", "operator": '$group', "order": 1, "options":{}} 
+  childTest.equal(JSON.stringify(indexes2[1]), JSON.stringify(expectedIndex2))
+  
+  // group with compound _id and first in pipeline
+  aggregation.pipeline = [{"$group": {"_id": { "x" : "$x", "y": "$y" },"z": { "$first" : "$z" }}}]
+  const indexes3 = generator.generateIndexes(aggregation)
+  childTest.equal(indexes3.length, 0)
 
+  // group first in pipeline with an operator that is not $first
+  aggregation.pipeline = [{"$group": {"_id": { "x" : "$x"},"z": { "$sum" : "$z" }}}]
+  const indexes4 = generator.generateIndexes(aggregation)
+  childTest.equal(indexes4.length, 0)
+  
   childTest.end()
 })
 

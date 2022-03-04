@@ -168,13 +168,13 @@ class Generator {
   }
 
   getGroupIndex(operator, stage, order, sequence, aggregation, name) {
-    // $group can potentially use an index to find the first document in each group if:
+    //     $group can potentially use an index to find the first document in each group if:
     //     $group is preceded by $sort that sorts the field to group by, and
     //     there is an index on the grouped field that matches the sort order, and
-    //     $first is the only accumulator in $group.    
-    if ((order == 0) || (!sequence.slice(0, order).includes('$sort'))){
-      return undefined
-    }
+    //     $first is the only accumulator in $group. 
+    //     => Tests: Indexes only used on first field of the group compound id if only $first is used
+    //               Either first stage or suitable sort
+    //     => Also index on the $first field will be added by the sort already.
 
     // check if there is an invalid previous step
     // and take the chance to get the order of the latest $sort
@@ -192,63 +192,72 @@ class Generator {
       aggOrder += 1
     }
 
-    // [
-    //   {
-    //     $sort:{ x : 1, y : 1 }
-    //   },
-    //   {
-    //     $group: {
-    //       _id: { x : "$x" },
-    //       y: { $first : "$y" }
-    //     }
-    //   }
-    // ]
-
-    let previousSortDict = aggregation.pipeline[previousSortOrder]["$sort"]
-
+    // make sure the only group operator is $first and save for possible index
     const elementDict = stage[operator]
-    
-    // check if the grouping fields match the sort
-    let validSortFields = {}
-    let i = 0
-    for (const groupField of Object.values(elementDict["_id"])) {
-      let idField = groupField.replace('$', '')
-      let sortField = Object.keys(previousSortDict)[i]
-      if (idField === sortField) {
-        validSortFields[sortField] = previousSortDict[sortField]
-      } else {
-        return undefined
-      }
-      i += 1
-    }
-    
-    // check if there is only a "first" stage with the matching field
-    if (Object.keys(previousSortDict).length > Object.keys(validSortFields).length && Object.keys(validSortFields).length>0) {
-      let nextSortField = Object.keys(previousSortDict)[Object.keys(validSortFields).length]
-      // loop over group stage elements
-      for (const [key, element] of Object.entries(elementDict)) {
-        if (key !== "_id") {
-          for (const [groupOp, field] of Object.entries(element)) {
-            if (groupOp == "$first" && String((field)).replace('$', '') == nextSortField){
-              validSortFields[nextSortField] = previousSortDict[nextSortField]
-            } else {
-              return undefined
-            }
+    let firstOpFields = {}
+    for (const [key, element] of Object.entries(elementDict)) {
+      if (key !== "_id") {
+        for (const [groupOp, field] of Object.entries(element)) {
+          if (groupOp !== "$first"){
+            firstOpFields = {}
+            break
+          } else {
+            firstOpFields[field.replace('$', '')] = 1
           }
         }
       }
-    } else {
-      return undefined
     }
 
-    // return fields index
-    let adaptedSortStage = aggregation.pipeline[previousSortOrder]
-    adaptedSortStage['$sort'] = validSortFields
-    let sortIndex = this.getSortIndex("$sort", adaptedSortStage, previousSortOrder, sequence, aggregation, name)
-    sortIndex.order = order
-    sortIndex.operator = operator
-    return sortIndex
+    // if no previous order, suggest index on the first id field
+    if (!(sequence.slice(0, order).includes('$sort'))){
+        // if no previous sort only $first allowed
+      if(Object.values(firstOpFields).length>0){
+        let groupIdFields = Object.values(elementDict["_id"])
+        if (groupIdFields.length < 2) {
+          let idField = groupIdFields[0].replace('$', '')
+          let indexKey = {}
+          indexKey[idField] = 1
+          for (const key of Object.keys(firstOpFields)) {
+            indexKey[key] = 1
+          }
+          return new Index(name, indexKey, aggregation.collection, "$group", order, {})
+        } else {
+          // TODO: check again if a compound index can be used (so far not used)
+          return undefined
+        }
+      } else {
+        return undefined
+      }
+    } else {
+
+      // check if the grouping fields match the sort
+      let previousSortDict = aggregation.pipeline[previousSortOrder]["$sort"]    
+      let validSortFields = {}
+      let i = 0
+      for (const groupField of Object.values(elementDict["_id"])) {
+        let idField = groupField.replace('$', '')
+        if(Object.keys(previousSortDict).length > i) {
+          let sortField = Object.keys(previousSortDict)[i]
+          if (idField === sortField) {
+            validSortFields[sortField] = previousSortDict[sortField]
+          } else {
+            return undefined
+          }
+        } else {
+          // add the compound index fields if there are no more sort fields
+          validSortFields[idField] = 1
+        }
+        i += 1
+      }
+
+      // return fields index: validSortFields (IXscan) plus firstOpFields (COVERAGE)
+      for (const key of Object.keys(firstOpFields)) {
+        validSortFields[key] = 1
+      }
+      return new Index(name, validSortFields, aggregation.collection, "$group", order, {})
+    }
   }
+
 
 }
 
