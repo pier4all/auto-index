@@ -3,18 +3,20 @@ function main() {
 
   const util = require('./src/util')
   const Generator = require('./src/generator')
+  const Combinator = require('./src/combinator')
 
   //const inputQueries = ["./data/input/queries/datagen"] //process.argv[1]
-  const inputQueries = ["./data/input/queries/custom"] //process.argv[1]
-  // const inputQueries = [
-  //                       "./data/input/queries/custom",
-  //                       "./data/input/queries/datagen",
-  //                       "./data/input/queries/tpch/s1/point_queries_experiment",
-  //                       "./data/input/queries/tpch/s1/tpch_experiment",
-  //                       "./data/input/queries/tpch/s2/point_queries_experiment",
-  //                       "./data/input/queries/tpch/s2/tpch_experiment",
-  //                       "./data/input/queries/tpch/s3/point_queries_experiment",
-  //                       "./data/input/queries/tpch/s3/tpch_experiment",] //process.argv[1]
+  // const inputQueries = ["./data/input/queries/custom"] //process.argv[1]
+  const inputQueries = [
+                        "./data/input/queries/custom",
+                        "./data/input/queries/datagen",
+                        "./data/input/queries/tpch/s1/point_queries_experiment",
+                        "./data/input/queries/tpch/s1/tpch_experiment",
+                        "./data/input/queries/tpch/s2/point_queries_experiment",
+                        "./data/input/queries/tpch/s2/tpch_experiment",
+                        "./data/input/queries/tpch/s3/point_queries_experiment",
+                        "./data/input/queries/tpch/s3/tpch_experiment"
+                      ] //process.argv[1]
 
     let queries = []
     console.log()
@@ -42,6 +44,10 @@ function main() {
       for (let index of indexeResult[key]){
         console.log("\t * ", JSON.stringify(index.toMongoJSON()))
       }
+
+      const combinator = new Combinator()
+      let combinedIndexes = combinator.combine(indexeResult[key])
+      console.log("\t => Combined: ", combinedIndexes)
     }
 
     console.log("Total Indexes: ", totalIndexes)

@@ -1,3 +1,4 @@
+const Aggregation = require("./aggregation")
 const Index = require("./index")
 const util = require("./util")
 
@@ -56,6 +57,8 @@ class Generator {
         return this.getSortIndex(operator, stage, order, sequence, aggregation, name);
       case '$group':
         return this.getGroupIndex(operator, stage, order, sequence, aggregation, name);
+      case '$lookup':
+        return this.getLookupIndex(operator, stage, order, sequence, aggregation, name);
       default:
         return undefined
     }
@@ -96,7 +99,7 @@ class Generator {
             if (COMPARISON_OPS.includes(exprOp)) {
               let comparisonFields = elementDict[key][exprOp]
               for (let compField of comparisonFields) {
-                if (String(compField).startsWith('$')){
+                if (String(compField).startsWith('$') && !String(compField).startsWith('$$')){
                   indexKey[compField.replace('$', '')] = 1  
                   // only add the first element
                   break
@@ -258,7 +261,53 @@ class Generator {
     }
   }
 
+  getLookupIndex(operator, stage, order, sequence, aggregation, name) {
 
+    //check wether it has a pipeline or not
+    let lookupPipeline = stage[operator]["pipeline"]
+
+    if (lookupPipeline) return this.getPipelineLookupIndex(operator, stage, order, sequence, aggregation, name)
+    else return this.getBasicLookupIndex(operator, stage, order, sequence, aggregation, name)
+  }
+
+  // Basic lookup (no pipeline)
+  getBasicLookupIndex(operator, stage, order, sequence, aggregation, name) {
+    let foreignField = stage[operator]["foreignField" ]
+
+    if (foreignField === '_id') {
+      return undefined
+    }
+
+    let indexKey = {}
+    indexKey[foreignField] = 1
+    return new Index(name, indexKey, stage[operator]["from"], operator, order, {})
+  }
+
+  //TODO LOOKUP WITH PIPELINE: review other pipeline options
+  getPipelineLookupIndex(operator, stage, order, sequence, aggregation, name) {
+    let foreignCollection = stage[operator]["from"]
+    let pipeline = stage[operator]["pipeline"]
+    let subOrder = 0
+    let indexKey = {}
+    for (let subStage of pipeline) {
+      const suboperator = util.getAggregationStageOperator(subStage)
+      if(suboperator == "$match") {
+        const subSequence = pipeline.map(util.getAggregationStageOperator); 
+        let subindex = this.getMatchIndex(suboperator, subStage, subOrder, subSequence, new Aggregation(aggregation.name, pipeline, foreignCollection, {}), name)
+        if (subindex) {
+          for (let key of Object.keys(subindex.key)){
+            indexKey[key]= 1
+          }
+        }
+      }
+      subOrder += 1
+    }
+    if (Object.keys(indexKey).length > 0) {
+      return new Index(name, indexKey, stage[operator]["from"], operator, order, {})
+    } else {
+      return undefined
+    }
+  }
 }
 
 module.exports = Generator

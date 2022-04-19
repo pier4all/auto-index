@@ -16,7 +16,18 @@ const jsonAggGroup1 = '{ "aggregate": "test_group1", "collection": "test_collect
 const jsonAggGroup2 = '{ "aggregate": "test_group2", "collection": "test_collection", "pipeline": [{"$match": {"z": 35}}, {"$sort": { "x" : 1, "y": 1}}, {"$group": {"_id": { "x" : "$x" },"y": { "$first" : "$y" }}}]}'
 const jsonAggGroup3 = '{ "aggregate": "test_group3", "collection": "test_collection", "pipeline": [{"$unwind": "$t"}, {"$sort": { "x" : 1, "y": 1}}, {"$group": {"_id": { "x" : "$x" },"y": { "$first" : "$y" }}}]}'
 const jsonAggGroup4 = '{ "aggregate": "test_group4", "collection": "test_collection", "pipeline": [{"$sort": { "x" : 1, "y": 1}}, {"$group": {"_id": { "x" : "$x", "z": "$z" },"y": { "$first" : "$y" }}}]}'
-
+const jsonAggLookup1 = JSON.stringify({ "aggregate": "test_lookup1", "collection": "test_collection", 
+                                        "pipeline": [{"$lookup": { "from" : "foreign_coll", "localField" : "local_field", "foreignField" : "foreign_field", "as" : "new_field"}},
+                                                     {"$lookup": { "from" : "foreign_coll", "localField" : "local_field2", "foreignField" : "_id", "as" : "new_field_id"}}]})
+const jsonAggLookup2 = JSON.stringify({ "aggregate": "test_lookup2", "collection": "test_collection", 
+                                        "pipeline": [ {"$lookup": {"from" : "foreign_coll", "let" : {"local": "$local_field"}, 
+                                                                   "pipeline" : [{ "$match": { "$expr": { "$eq": ["$$ref", "$empno"]}}}],
+                                                                   "as" : "new_field"}},
+                                                      {"$lookup": {"from" : "foreign_coll", "let" : {"local": "$local_field"}, 
+                                                                   "pipeline" : [
+                                                                    {"$lookup": {"from": "orders-lineitem", "localField": "_id", "foreignField": "o_custkey", "as": "c_orders"}}, {"$match": {"foreign_field_2": 0}}
+                                                                   ],
+                                                                   "as" : "new_field"}}]})
 
 // test initialization
 tap.before(async function() { 
@@ -220,6 +231,38 @@ tap.test('group stage corner cases', async (childTest) => {
   const indexes4 = generator.generateIndexes(aggregation)
   childTest.equal(indexes4.length, 0)
   
+  childTest.end()
+})
+
+tap.test('generate index for basic lookup stage but not if foreign field is _id', async (childTest) => {
+  const aggregation = Aggregation.fromJSON(jsonAggLookup1)
+   
+  const generator = new Generator()
+
+  const indexes = generator.generateIndexes(aggregation)
+
+  childTest.equal(indexes.length, 1)
+  childTest.equal(indexes[0].operator, "$lookup")
+  
+  const expectedIndex = {"name":"test_lookup1_test_collection_lookup_0","key":{"foreign_field":1},"collection":"foreign_coll","operator":"$lookup","order":0,"options":{}}
+  childTest.equal(JSON.stringify(indexes[0]), JSON.stringify(expectedIndex))
+
+  childTest.end()
+})
+
+
+tap.test('generate index for lookup stage with pipeline', async (childTest) => {
+  const aggregation = Aggregation.fromJSON(jsonAggLookup2)
+   
+  const generator = new Generator()
+
+  const indexes = generator.generateIndexes(aggregation)
+
+  childTest.equal(indexes.length, 1)
+
+  const expectedIndex = {"name":"test_lookup2_test_collection_lookup_0","key":{"empno":1},"collection":"foreign_coll","operator":"$lookup","order":0,"options":{}}
+  childTest.equal(JSON.stringify(indexes[0]), JSON.stringify(expectedIndex))
+
   childTest.end()
 })
 

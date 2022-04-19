@@ -1,5 +1,5 @@
 {
-    "aggregate":"custom-01",
+    "aggregate":"custom-05",
     "pipeline":[
       {
         "$match":{
@@ -8,17 +8,11 @@
       },
       {
         "$sort":{
-          "shape":1
-        }
-      },
-      {
-        "$sort":{
           "size":1
         }
-      },
-      {
+      },{
         "$match":{
-          "round": false
+          "size": {"$lt": 2}
         }
       }
     ],

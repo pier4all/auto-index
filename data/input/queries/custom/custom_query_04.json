@@ -1,0 +1,36 @@
+{
+  "aggregate":"custom-04",
+  "pipeline":[
+    { "$match":
+      {
+        "$expr": {"$eq": ["$username", "lucia.espona@fhnw.ch"]}
+      }
+    },
+    { "$lookup":
+      {
+        "from" : "employees",
+        "localField" : "ref-empno",
+        "foreignField" : "empno",
+        "as" : "employee"
+      }
+    },
+    { "$lookup":
+      {
+        "from": "employees",
+        "let": { "ref": "$ref-empno" },
+        "pipeline": [
+          { "$match": 
+            { "$expr":
+              { "$eq": ["$$ref", "$empno"] } 
+            } 
+          }
+        ],
+        "as": "employee"
+      }
+   }
+  ],
+  "collection": "users",
+  "allowDiskUse":true,
+  "maxTimeMS":0,
+  "cursor":{}
+}

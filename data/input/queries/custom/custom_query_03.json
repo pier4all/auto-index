@@ -7,7 +7,7 @@
       }
     }
   ],
-  "collection": "figures",
+  "collection": "users",
   "allowDiskUse":true,
   "maxTimeMS":0,
   "cursor":{}
