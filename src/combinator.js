@@ -10,7 +10,7 @@ class Combinator {
   
     combine(indexes) {
         // combine indexes from a single pipeline
-        
+        // TODO independent match fields
         let collections = [...new Set(indexes.map(function(i) {return i.collection}))]
 
         let combinedIndexes = []
@@ -20,6 +20,7 @@ class Combinator {
 
             let base_match_key = {}
             // 1. add match indexes
+            // TODO: Maybe generate all combinations
             let match_keys = collection_indexes.filter(i => i.operator == '$match').map(function(i) {return i.key}) 
             
             for (let key_obj of match_keys) {

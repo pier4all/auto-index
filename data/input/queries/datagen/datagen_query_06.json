@@ -1,0 +1,55 @@
+{
+  "aggregate":"datagen-06-top-10-customers",
+  "pipeline":[
+    {
+      "$match": {
+        "_id.period": "{$PERIOD}" 
+      }
+    }, {
+      "$lookup": {
+        "from": "projects", 
+        "localField": "_id.ref-project", 
+        "foreignField": "_id", 
+        "as": "project"
+      }
+    }, {
+      "$lookup": {
+        "from": "customers", 
+        "localField": "project.ref-customer", 
+        "foreignField": "_id", 
+        "as": "customer"
+      }
+    }, {
+      "$addFields": {
+        "customer_name": {
+          "$first": "$customer.name"
+        }
+      }
+    }, {
+      "$group": {
+        "_id": "$customer_name", 
+        "hours": {
+          "$sum": "$hours"
+        }, 
+        "amount": {
+          "$sum": "$amount"
+        }
+      }
+    }, {
+      "$sort": {
+        "amount": -1
+      }
+    }, {
+      "$limit": 10
+    }, {
+      "$project": {
+        "service_hours": "$hours", 
+        "totally_invoiced": "$amount"
+      }
+    }
+  ],
+  "collection": "invoices",
+  "allowDiskUse":true,
+  "maxTimeMS":0,
+  "cursor":{}
+}

@@ -1,41 +1,75 @@
 {
-  "aggregate":"datagen-02-aggregate-timesheets",
+  "aggregate":"datagen-02-monthly-invoicing",
   "pipeline":[
-    {
-      "$addFields":{
-        "price":{
-          "$multiply":[
-            "$quantity",
-            "{$QUANTITY}"
-          ]
-        }
-      }
-    },
-    {
-      "$group":{
-        "_id":{
-          "project":"$ref-project",
-          "year":{
-            "$year":"$date"
-          },
-          "month":{
-            "$month":"$date"
+          {
+            "$match": {
+              "date": {
+                "$gte": "{$START_DATE}", 
+                "$lt":  "{$END_DATE}"
+              }
+            }
+          }, {
+            "$lookup": {
+              "from": "services", 
+              "localField": "ref-service", 
+              "foreignField": "_id", 
+              "as": "service"
+            }
+          }, {
+            "$addFields": {
+              "service": {
+                "$arrayElemAt": ["$service", 0]
+              }
+            }
+          }, {
+            "$addFields": {
+              "price": {
+                "$round": [
+                  {
+                    "$multiply": [
+                      "$quantity", "$service.price"
+                    ]
+                  }, 1
+                ]
+              }
+            }
+          }, {
+            "$group": {
+              "_id": {
+                "ref-project": "$ref-project", 
+                "period": {
+                  "$dateToString": {
+                    "format": "%Y-%m", 
+                    "date": "$date"
+                  }
+                }
+              }, 
+              "item": {
+                "$push": {
+                  "ref-timesheet": "$_id", 
+                  "quantity": "$quantity",
+                  "rate": "$service.price", 
+                  "linetotal": "$price", 
+                  "date": "$date"
+                }
+              }, 
+              "hours": {
+                "$sum": "$quantity"
+              }, 
+              "amount": {
+                "$sum": "$price"
+              }
+            }
+          }, {
+            "$addFields": {
+              "hours": {
+                "$round": [
+                  "$hours", 1
+                ]
+              }
+            }
           }
-        },
-        "item":{
-          "$push":{
-            "ref-timesheet":"$_id",
-            "quantity":"$quantity",
-            "price":"$price",
-            "date":"$date"
-          }
-        },
-        "amount":{
-          "$sum":"$price"
-        }
-      }
-    }
-  ],
+        ],
   "collection": "timesheets",
   "allowDiskUse":true,
   "maxTimeMS":0,

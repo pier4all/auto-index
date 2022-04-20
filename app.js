@@ -24,6 +24,7 @@ function main() {
     for (let inputDir of inputQueries) {
       console.log(" - Reading input directory: " + inputDir)
 
+      // TODO: add the collection to al input files and remove the default collection parameter
       const dirQueries = util.getAggregationsFromDir(inputDir, "lineitems")
       console.log("\t * Got " + dirQueries.length + " queries")
 
@@ -47,7 +48,7 @@ function main() {
 
       const combinator = new Combinator()
       let combinedIndexes = combinator.combine(indexeResult[key])
-      console.log("\t => Combined: ", combinedIndexes)
+      console.log("\t => Combined: ", combinedIndexes.map(i => i.key))
     }
 
     console.log("Total Indexes: ", totalIndexes)

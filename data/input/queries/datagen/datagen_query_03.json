@@ -1,84 +1,25 @@
 {
-  "aggregate":"datagen-03-mat-view-invoices",
+  "aggregate":"datagen-03-find-billed-timesheets",
   "pipeline":[
-          {
-            "$match": {
-              "date": {
-                "$gte": "{$START_DATE}", 
-                "$lt":  "{$END_DATE}"
-              }
-            }
-          }, {
-            "$lookup": {
-              "from": "services", 
-              "localField": "ref-service", 
-              "foreignField": "_id", 
-              "as": "service"
-            }
-          }, {
-            "$addFields": {
-              "service": {
-                "$arrayElemAt": ["$service", 0]
-              }
-            }
-          }, {
-            "$addFields": {
-              "price": {
-                "$round": [
-                  {
-                    "$multiply": [
-                      "$quantity", "$service.price"
-                    ]
-                  }, 1
-                ]
-              }
-            }
-          }, {
-            "$group": {
-              "_id": {
-                "ref-project": "$ref-project", 
-                "period": {
-                  "$dateToString": {
-                    "format": "%Y-%m", 
-                    "date": "$date"
-                  }
-                }
-              }, 
-              "item": {
-                "$push": {
-                  "ref-timesheet": "$_id", 
-                  "quantity": "$quantity",
-                  "rate": "$service.price", 
-                  "linetotal": "$price", 
-                  "date": "$date"
-                }
-              }, 
-              "hours": {
-                "$sum": "$quantity"
-              }, 
-              "amount": {
-                "$sum": "$price"
-              }
-            }
-          }, {
-            "$addFields": {
-              "hours": {
-                "$round": [
-                  "$hours", 1
-                ]
-              }
-            }
-          }, {
-            "$merge": {
-              "into": "invoices", 
-              "whenMatched": "replace"
-            }
-          }
-        ],
-  "collection": "timesheets",
+    {
+      "$project": {
+        "_id": 0,
+        "item.ref-timesheet": 1
+      }
+    }, {
+      "$unwind": {
+        "path": "$item",
+        "includeArrayIndex": "string",
+        "preserveNullAndEmptyArrays": false
+      }
+    }, {
+      "$replaceRoot": {
+        "newRoot": "$item"
+      }
+    }
+  ],
+  "collection": "invoices",
   "allowDiskUse":true,
   "maxTimeMS":0,
-  "cursor":{
-    
-  }
+  "cursor":{}
 }

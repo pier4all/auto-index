@@ -16,6 +16,11 @@ exports.getAggregationsFromDir = (inputDir, defaultCollection = undefined) => {
     }
     dir.closeSync()
 
+    queries.sort((a, b) => {
+      if (a.name < b.name) return -1
+      else  return 1;
+    })
+    
     return queries
 }
 

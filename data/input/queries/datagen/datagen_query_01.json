@@ -1,49 +1,51 @@
 {
-  "aggregate":"datagen-01-aggregate-timesheets-by-project",
+  "aggregate":"datagen-01-review-booked-hours",
   "pipeline":[
     {
-      "$match":{
-        "ref-project": "{$PROJECT_ID}"
-      }
-    },
-    {
-      "$addFields":{
-        "price":{
-          "$round":[
-            {
-              "$multiply":[
-                "$quantity",
-                "{$QUANTITY}"
-              ]
-            },
-            1
-          ]
+      "$match": {
+        "ref-employee": "{$EMPLOYEE}", 
+        "date": {
+          "$gte": "{$START_DATE}", 
+          "$lt": "{$END_DATE}"
         }
+      } 
+    }, {
+      "$group": {
+        "_id": "$ref-project",
+        "total_hours": {
+          "$sum": "$quantity"
+        },
+        "bookings": {
+          "$push": {
+            "date": "$date",
+            "hours": "$quantity"
+          }
+        } 
       }
-    },
-    {
-      "$group":{
-        "_id":{
-          "project":"$ref-project",
-          "year":{
-            "$year":"$date"
-          },
-          "month":{
-            "$month":"$date"
-          }
-        },
-        "item":{
-          "$push":{
-            "ref-timesheet":"$_id",
-            "quantity":"$quantity",
-            "price":"$price",
-            "date":"$date"
-          }
-        },
-        "amount":{
-          "$sum":"$price"
+    }, {
+      "$lookup": {
+        "from": "projects",
+        "localField": "_id",
+        "foreignField": "_id",
+        "as": "project"
+      } 
+    }, {
+      "$addFields": {
+        "project_name": {
+          "$first": "$project.title"
         }
-      }
+      } 
+    }, {
+      "$project": {
+        "project_name": 1,
+        "total_hours": "$total_hours",
+        "items": "$bookings",
+        "totally_invoiced": "$amount"
+      } 
+    }, {
+      "$sort": {
+        "total_hours": -1
+      } 
     }
   ],
   "collection": "timesheets",

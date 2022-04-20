@@ -1,25 +1,28 @@
 {
-  "aggregate":"datagen-04-query-invoices-updating-timesheets",
+  "aggregate":"datagen-04-sales-revenue-by-month",
   "pipeline":[
-	  {
+	{
+		"$group": {
+			"_id": "$_id.period",
+			"hours": {
+				"$sum": "$hours"
+			},
+			"amount": {
+				"$sum": "$amount"
+			} 
+		}
+	}, {
+		"$sort": {
+			"_id": -1 
+		}
+	}, {
 		"$project": {
-		  "_id": "{$PROJECT_ID}", 
-		  "item.ref-timesheet": "{$TIMESHEET_ID}"
-		}
-	  }, {
-		"$unwind": {
-		  "path": "$item", 
-		  "includeArrayIndex": "string", 
-		  "preserveNullAndEmptyArrays": false
-		}
-	  }, {
-		"$replaceRoot": {
-		  "newRoot": "$item"
-		}
-	  }, {
-		"$limit": 10
-	  }
-	],
+			"period": "$period",
+			"service_hours": "$hours",
+			"totally_invoiced": "$amount"
+		} 
+	}
+  ],
   "collection": "invoices",
   "allowDiskUse":true,
   "maxTimeMS":0,
