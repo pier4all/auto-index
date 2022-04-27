@@ -44,6 +44,33 @@ tap.test('get aggregationstage operator', async (childTest) => {
   childTest.end()
 })
 
+tap.test('remove existing object from array by matching key-value pair', async (childTest) => {
+  const object_array = [
+     {"key":{"color":1},"name":"custom-01_figures_match_0"},
+     {"key":{"shape":1},"name":"custom-02_figures_sort_1"},
+     {"key":{"size":1},"name":"custom-03_figures_sort_2"},
+     {"key":{"round":1},"name":"custom-04_figures_match_3"}
+  ]
+  const key2delete = "name"
+  const value2delete = "custom-03_figures_sort_2"
+  const new_array = util.removeIndexFromArray(object_array, key2delete, value2delete)
+  childTest.equal(object_array.length-1, new_array.length)
+  childTest.end()
+})
+
+tap.test('remove non-existing object from array by matching key-value pair', async (childTest) => {
+  const object_array = [
+    {"key":{"color":1},"name":"custom-01_figures_match_0"},
+    {"key":{"shape":1},"name":"custom-02_figures_sort_1"},
+    {"key":{"round":1},"name":"custom-04_figures_match_3"}
+ ]
+  const key2delete = "name"
+  const value2delete = "custom-03_figures_sort_2"
+  const new_array = util.removeIndexFromArray(object_array, key2delete, value2delete)
+  childTest.equal(object_array.length, new_array.length)
+  childTest.end()
+})
+
 // test cleanup
 tap.teardown(async function() { 
 
