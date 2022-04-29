@@ -1,0 +1,117 @@
+{
+  "aggregate":"hr-normalized-03",
+  "pipeline": [
+      {
+        "$match": {
+          "$expr": {
+            "$not": [
+              {
+                "$and": [
+                  {
+                    "$lt": [
+                      "$projectStart", "{$END_DATE}"
+                    ]
+                  }, {
+                    "$gt": [
+                      "$projectEnd", "{$START_DATE}"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }, {
+        "$project": {
+          "_id": 1, 
+          "projectStart": 1, 
+          "projectEnd": 1
+        }
+      }, {
+        "$lookup": {
+          "from": "employees-norm", 
+          "let": {
+            "project_id": "$_id"
+          }, 
+          "pipeline": [
+            {
+              "$match": {
+                "$expr": {
+                  "$or": [
+                    {
+                      "$in": [
+                        "$$project_id", "$projects"
+                      ]
+                    }, {
+                      "$eq": [
+                        {
+                          "$size": "$projects"
+                        }, 0
+                      ]
+                    }
+                  ]
+                }
+              }
+            }, {
+              "$project": {
+                "_id": 1, 
+                "projectStart": 1, 
+                "projectEnd": 1, 
+                "projects": 1
+              }
+            }
+          ], 
+          "as": "employees"
+        }
+      }, {
+        "$unwind": {
+          "path": "$employees"
+        }
+      }, {
+        "$group": {
+          "_id": "$employees._id", 
+          "projects": {
+            "$first": "$employees.projects"
+          }, 
+          "matching": {
+            "$push": {
+              "$cond": [
+                {
+                  "$in": [
+                    "$_id", "$employees.projects"
+                  ]
+                }, {
+                  "_id": "$_id", 
+                  "projectStart": "$projectStart", 
+                  "projectEnd": "$projectEnd"
+                }, "$$REMOVE"
+              ]
+            }
+          }, 
+          "match_count": {
+            "$sum": 1
+          }
+        }
+      }, {
+        "$match": {
+          "$expr": {
+            "$or": [
+              {
+                "$eq": [
+                  {
+                    "$size": "$projects"
+                  }, {
+                    "$size": "$matching"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ],
+  "collection": "projects-norm",
+  "allowDiskUse":true,
+  "maxTimeMS":0,
+  "cursor":{}
+}

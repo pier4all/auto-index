@@ -1,0 +1,34 @@
+{
+  "aggregate":"hr-normalized-04-roles",
+  "pipeline": [
+    {
+      "$project": {
+        "roleName": 1
+      }
+    }, {
+      "$match": {
+        "roleName": "{$ROLE_NAME}"
+      }
+    }, {
+      "$lookup": {
+        "from": "employees-norm", 
+        "localField": "_id", 
+        "foreignField": "user.role", 
+        "as": "employeesWithRole"
+      }
+    }, {
+      "$unwind": {
+        "path": "$employeesWithRole"
+      }
+    }, {
+      "$project": {
+        "_id": "$employeesWithRole._id"
+      }
+    }
+  ]
+,
+  "collection": "roles-norm",
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}

@@ -1,0 +1,53 @@
+{
+  "aggregate":"hr-normalized-01-free-employee",
+  "pipeline": [
+    {
+      "$project": {
+        "projects": 1
+      }
+    }, {
+      "$project": {
+        "joinedProjects": {
+          "$filter": {
+            "input": "$projects", 
+            "cond": {
+              "$and": [
+                {
+                  "$eq": [
+                    "$$this.projectActive", true
+                  ]
+                }, {
+                  "$lte": [
+                    "$$this.projectStart", "{$END_DATE}"
+                  ]
+                }, {
+                  "$gte": [
+                    "$$this.projectEnd", "{$START_DATE}"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    }, {
+      "$match": {
+        "$expr": {
+          "$eq": [
+            {
+              "$size": "$joinedProjects"
+            }, 0
+          ]
+        }
+      }
+    }, {
+      "$project": {
+        "_id": 1
+      }
+    }
+  ],
+  "collection": "employee-norm",
+  "allowDiskUse":true,
+  "maxTimeMS":0,
+  "cursor":{}
+}

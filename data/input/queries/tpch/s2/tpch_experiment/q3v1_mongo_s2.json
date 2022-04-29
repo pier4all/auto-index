@@ -83,6 +83,7 @@
       "$limit": 10
     }
   ],
+  "collection": "orders",
   "allowDiskUse": true,
   "maxTimeMS": 0,
   "cursor": {}

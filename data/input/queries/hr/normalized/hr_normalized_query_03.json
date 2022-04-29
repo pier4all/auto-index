@@ -1,0 +1,52 @@
+{
+  "aggregate":"hr-normalized-03-skill-find",
+  "pipeline": [
+    {
+      "$project": {
+        "matches": {
+          "$filter": {
+            "input": "$person.skills", 
+            "as": "skill", 
+            "cond": {
+              "$or": [
+                {
+                  "$in": [
+                    "{$SKILL_TAGS[0]}", "$$skill.skillTags"
+                  ]
+                }, {
+                  "$in": [
+                    "{$SKILL_TAGS[1]}", "$$skill.skillTags"
+                  ]
+                }, {
+                  "$in": [
+                    "{$SKILL_TAGS[2]}", "$$skill.skillTags"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    }, {
+      "$addFields": {
+        "count": {
+          "$size": "$matches"
+        }
+      }
+    }, {
+      "$match": {
+        "count": {
+          "$gt": 0
+        }
+      }
+    }, {
+      "$sort": {
+        "count": -1
+      }
+    }
+  ],
+  "collection": "employees-norm",
+  "allowDiskUse":true,
+  "maxTimeMS":0,
+  "cursor":{}
+}

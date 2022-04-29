@@ -1,0 +1,33 @@
+{
+  "aggregate":"hr-denormalized-04-roles",
+  "pipeline":[
+    {
+      "$project": {
+        "roleName": 1
+      }
+    }, {
+      "$match": {
+        "roleName": "{$ROLE_NAME}"
+      }
+    }, {
+      "$lookup": {
+        "from": "employees-den", 
+        "localField": "_id", 
+        "foreignField": "user.role", 
+        "as": "employeesWithRole"
+      }
+    }, {
+      "$unwind": {
+        "path": "$employeesWithRole"
+      }
+    }, {
+      "$project": {
+        "_id": "$employeesWithRole._id"
+      }
+    }
+  ],
+  "collection": "roles-den",
+  "allowDiskUse":true,
+  "maxTimeMS":0,
+  "cursor":{}
+}

@@ -76,6 +76,7 @@
       "$limit": 10
     }
   ],
+  "collection": "scale1",
   "allowDiskUse": true,
   "maxTimeMS": 0,
   "cursor": {}

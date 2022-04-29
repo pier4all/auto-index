@@ -6,17 +6,19 @@ function main() {
   const Cleaner = require('./src/cleaner')
 
   let minimize = false
-  //const inputQueries = ["./data/input/queries/datagen"] //process.argv[1]
+  // const inputQueries = ["./data/input/queries/datagen"] //process.argv[1]
   // const inputQueries = ["./data/input/queries/custom"] //process.argv[1]
   const inputQueries = [
                         "./data/input/queries/custom",
-                        // "./data/input/queries/datagen",
-                        // "./data/input/queries/tpch/s1/point_queries_experiment",
-                        // "./data/input/queries/tpch/s1/tpch_experiment",
-                        // "./data/input/queries/tpch/s2/point_queries_experiment",
-                        // "./data/input/queries/tpch/s2/tpch_experiment",
-                        // "./data/input/queries/tpch/s3/point_queries_experiment",
-                        // "./data/input/queries/tpch/s3/tpch_experiment"
+                        "./data/input/queries/datagen",
+                        "./data/input/queries/tpch/s1/point_queries_experiment",
+                        "./data/input/queries/tpch/s1/tpch_experiment",
+                        "./data/input/queries/tpch/s2/point_queries_experiment",
+                        "./data/input/queries/tpch/s2/tpch_experiment",
+                        "./data/input/queries/tpch/s3/point_queries_experiment",
+                        "./data/input/queries/tpch/s3/tpch_experiment",
+                        "./data/input/queries/hr/normalized",
+                        "./data/input/queries/hr/denormalized"
                       ] //process.argv[1]
 
     let queries = []

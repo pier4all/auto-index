@@ -29,6 +29,22 @@ const jsonAggLookup2 = JSON.stringify({ "aggregate": "test_lookup2", "collection
                                                                    ],
                                                                    "as" : "new_field"}}]})
 
+const jsonMatchLogicalOp = JSON.stringify({ "aggregate": "test_logical_op", "collection": "test_collection", "pipeline": [
+                                                                    {"$match": { "$expr": {
+                                                                          "$not": [ {
+                                                                              "$and": [ { "$lt": [ "$start", "{$END_DATE}" ] }, { "$gt": [ "$end", "{$START_DATE}" ] }
+                                                                              ]
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      }
+                                                                    }]})
+const jsonMatchSortAliases = JSON.stringify({ "aggregate": "test1", "collection": "test_collection", "pipeline": [{"$addFields": {"age": "$o.age", "salary": "$o.payment"}}, {"$match": {"age": 35}}, {"$sort": {"salary": 1, "x": -1}}], "allowDiskUse":true})
+const jsonAggGroupAliases1 = JSON.stringify({ "aggregate": "test_group_alias1", "collection": "test_collection", "pipeline": [{"$addFields": {"age": "$o.age"}}, {"$group": {"_id": { "x" : "$age" },"y": { "$first" : "$y" }}}]})
+const jsonAggGroupAliases2 = JSON.stringify({ "aggregate": "test_group_alias2", "collection": "test_collection", "pipeline": [{"$addFields": {"age": "$o.age"}}, {"$sort": { "x" : 1, "age": 1}}, {"$group": {"_id": { "x" : "$x" },"y": { "$first" : "$age" }}}]})
+const jsonAggGroupAliases3 = JSON.stringify({ "aggregate": "test_group_alias3", "collection": "test_collection", "pipeline": [{"$addFields": {"age": "$o.age"}}, {"$sort": { "x" : 1, "age": 1}}, {"$group": {"_id": { "x" : "$age" },"y": { "$first" : "$y" }}}]})
+const jsonAggGroupAliases4 = JSON.stringify({ "aggregate": "test_group_alias3", "collection": "test_collection", "pipeline": [{"$addFields": {"age": "$o.age"}}, {"$group": {"_id": { "x" : "$x" },"y": { "$first" : "$age" }}}]})
+
 // test initialization
 tap.before(async function() { 
 
@@ -250,19 +266,112 @@ tap.test('generate index for basic lookup stage but not if foreign field is _id'
   childTest.end()
 })
 
-
 tap.test('generate index for lookup stage with pipeline', async (childTest) => {
   const aggregation = Aggregation.fromJSON(jsonAggLookup2)
+      
+  const generator = new Generator()
+   
+  const indexes = generator.generateIndexes(aggregation)
+   
+  childTest.equal(indexes.length, 1)
+ 
+  const expectedIndex = {"name":"test_lookup2_test_collection_lookup_0","key":{"empno":1},"collection":"foreign_coll","operator":"$lookup","order":0,"options":{}}
+  childTest.equal(JSON.stringify(indexes[0]), JSON.stringify(expectedIndex))
+   
+  childTest.end()
+})
+
+tap.test('generate index for match with logical operator', async (childTest) => {
+  const aggregation = Aggregation.fromJSON(jsonMatchLogicalOp)
    
   const generator = new Generator()
 
   const indexes = generator.generateIndexes(aggregation)
 
   childTest.equal(indexes.length, 1)
-
-  const expectedIndex = {"name":"test_lookup2_test_collection_lookup_0","key":{"empno":1},"collection":"foreign_coll","operator":"$lookup","order":0,"options":{}}
+  childTest.equal(indexes[0].operator, "$match")
+  
+  const expectedIndex = {"name":"test_logical_op_test_collection_match_0","key":{"start":1,"end":1},"collection":"test_collection","operator":"$match","order":0,"options":{}} 
   childTest.equal(JSON.stringify(indexes[0]), JSON.stringify(expectedIndex))
 
+  childTest.end()
+})
+
+tap.test('generate indexes for logical operator corner cases', async (childTest) => {
+    
+  const generator = new Generator()
+
+  const logicfields = generator.processLogicalOperator([{"$and": [ { "$lt": [ "$start", "{$END_DATE}" ] }, { "$gt": [ "$$end", "{$START_DATE}" ] }]}])
+
+  childTest.equal(JSON.stringify({"start":1}), JSON.stringify(logicfields))
+
+  childTest.end()
+})
+
+tap.test('generate no index for match sort stages with fields from aliases', async (childTest) => {
+  const aggregation = Aggregation.fromJSON(jsonMatchSortAliases)
+   
+  const generator = new Generator()
+
+  const indexes = generator.generateIndexes(aggregation)
+
+  childTest.equal(indexes.length, 0)
+  
+  childTest.end()
+})
+
+tap.test('generate no index for group stage with id field from alias', async (childTest) => {
+  const aggregation = Aggregation.fromJSON(jsonAggGroupAliases1)
+   
+  const generator = new Generator()
+
+  const indexes = generator.generateIndexes(aggregation)
+
+  childTest.equal(indexes.length, 0)
+  
+  childTest.end()
+})
+
+
+tap.test('generate no index for group stage with id field from alias', async (childTest) => {
+  const aggregation = Aggregation.fromJSON(jsonAggGroupAliases2)
+   
+  const generator = new Generator()
+
+  const indexes = generator.generateIndexes(aggregation)
+
+  childTest.equal(indexes.length, 2)
+  
+  const expectedIndexSort =  {"name":"test_group_alias2_test_collection_sort_1","key":{"x":1},"collection":"test_collection","operator":"$sort","order":1,"options":{}}  
+  childTest.equal(JSON.stringify(indexes[0]), JSON.stringify(expectedIndexSort))
+
+  const expectedIndexGroup = {"name":"test_group_alias2_test_collection_group_2","key":{"x":1},"collection":"test_collection","operator":"$group","order":2,"options":{}} 
+  childTest.equal(JSON.stringify(indexes[1]), JSON.stringify(expectedIndexGroup))
+
+  childTest.end()
+})
+
+tap.test('generate no index for group stage with id field from alias and previous sort', async (childTest) => {
+  const aggregation = Aggregation.fromJSON(jsonAggGroupAliases3)
+   
+  const generator = new Generator()
+
+  const indexes = generator.generateIndexes(aggregation)
+
+  childTest.equal(indexes.length, 1)
+  childTest.equal(indexes[0].operator, "$sort")
+  childTest.end()
+})
+
+tap.test('generate index for group stage should not include first field from alias', async (childTest) => {
+  const aggregation = Aggregation.fromJSON(jsonAggGroupAliases4)
+   
+  const generator = new Generator()
+
+  const indexes = generator.generateIndexes(aggregation)
+
+  childTest.equal(indexes.length, 1)
+  childTest.equal(JSON.stringify(indexes[0].key), JSON.stringify({"x": 1}))
   childTest.end()
 })
 

@@ -71,6 +71,7 @@
       "$limit": 10
     }
   ],
+  "collection": "orders-lineitem",
   "allowDiskUse": true,
   "maxTimeMS": 0,
   "cursor": {}

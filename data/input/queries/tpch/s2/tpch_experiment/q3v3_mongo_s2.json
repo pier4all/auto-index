@@ -83,6 +83,7 @@
       "$limit": 10
     }
   ],
+  "collection": "lineitem",
   "allowDiskUse": true,
   "maxTimeMS": 0,
   "cursor": {}

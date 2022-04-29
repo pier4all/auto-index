@@ -19,6 +19,7 @@
       }
     }
   ],
+  "collection": "customer",
   "allowDiskUse": true,
   "maxTimeMS": 0,
   "cursor": {}

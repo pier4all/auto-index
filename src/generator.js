@@ -6,7 +6,7 @@ const util = require("./util")
 
 // move later to commons/const
 // operators that change the syntax
-const LOGIC_OPS = ["$or", "$and", "$nor"]
+const LOGIC_OPS = ["$or", "$and", "$nor", "$not"]
 const COMPARISON_OPS = ['$cmp', '$eq', '$gt', '$gte', '$lt', '$lte', '$ne']
 class Generator {
   constructor() {
@@ -68,7 +68,7 @@ class Generator {
     // $match can use an index to filter documents if $match is the first stage in a pipeline or 
     // if the previous ones are of a type that is moved for later by mongo.
     if (order > 0){
-      const valid = ["$project", "$match", "$unset", "$addFields", "$set", "$sort"]
+      const valid = ["$project", "$match", "$unset", "$set", "$sort", "$addFields"] 
       for (let previous of sequence.slice(0, order)) {
         if (!valid.includes(previous)) {
           return undefined
@@ -94,7 +94,7 @@ class Generator {
           // expressions { $expr: { $gt: [ "$spent" , "$budget" ] } }
           if (key === '$expr'){
             let exprOp = Object.keys(elementDict[key])[0]
-            // Check if it is a compariso operator
+            // Check if it is a comparison operator
             // TODO: check other types of operators
             if (COMPARISON_OPS.includes(exprOp)) {
               let comparisonFields = elementDict[key][exprOp]
@@ -105,11 +105,23 @@ class Generator {
                   break
                 }
               }
+            } else if (LOGIC_OPS.includes(exprOp)) {
+              //deal with logical operator clauses
+              const logicIndex = this.processLogicalOperator(elementDict[key][exprOp])
+              Object.keys(logicIndex).forEach(function(field, pos) {
+                    indexKey[field] = 1          
+              }) 
             }
           }
         }
-      }
+      }     
     }
+
+    // get aliases to avoid putting them in the index
+    let addedFields = this.getAddedFields(aggregation.pipeline.slice(0, order))
+    addedFields.forEach(function(alias) {
+      delete indexKey[alias]     
+    }) 
 
     // return fields index
     if (indexKey && Object.keys(indexKey).length>0) {
@@ -131,7 +143,16 @@ class Generator {
             Object.keys(logicIndex).forEach(function(field, pos) {
               logicfields[field] = 1          
             })      
-          } 
+          } else if (COMPARISON_OPS.includes(param)) {
+            let comparisonFields = logicParam[param]
+            for (let compField of comparisonFields) {
+              if (String(compField).startsWith('$') && !String(compField).startsWith('$$')){
+                logicfields[compField.replace('$', '')] = 1  
+                // only add the first element
+                break
+              }
+            }  
+          }
         }
       }
     }
@@ -152,12 +173,20 @@ class Generator {
 
     const elementDict = stage[operator]
 
+    // get aliases to avoid putting them in the index
+    let addedFields = this.getAddedFields(aggregation.pipeline.slice(0, order))
+
     let indexKey = {}
     // loop over match stage elements
     for (const [key, index] of Object.entries(elementDict)) {
       if (!key.startsWith('$')){
         if ((elementDict[key] == 1) || elementDict[key] == -1){
-          indexKey[key] = elementDict[key]          
+          if(addedFields.includes(key)) {
+            break
+          }
+          else {
+            indexKey[key] = elementDict[key]          
+          }
         }
       }
     }
@@ -211,6 +240,9 @@ class Generator {
       }
     }
 
+    // get aliases to avoid putting them in the index
+    let addedFields = this.getAddedFields(aggregation.pipeline.slice(0, order))
+
     // if no previous order, suggest index on the first id field
     if (!(sequence.slice(0, order).includes('$sort'))){
         // if no previous sort only $first allowed
@@ -218,12 +250,19 @@ class Generator {
         let groupIdFields = Object.values(elementDict["_id"])
         if (groupIdFields.length < 2) {
           let idField = groupIdFields[0].replace('$', '')
-          let indexKey = {}
-          indexKey[idField] = 1
-          for (const key of Object.keys(firstOpFields)) {
-            indexKey[key] = 1
+          if(!addedFields.includes(idField)) {
+            let indexKey = {}
+            indexKey[idField] = 1
+            for (const key of Object.keys(firstOpFields)) {
+              if(!addedFields.includes(key)) {
+                indexKey[key] = 1          
+              }
+            }
+            return new Index(name, indexKey, aggregation.collection, "$group", order, {})
+          } else {
+            // TODO: check again if a compound index can be used (so far not used)
+            return undefined
           }
-          return new Index(name, indexKey, aggregation.collection, "$group", order, {})
         } else {
           // TODO: check again if a compound index can be used (so far not used)
           return undefined
@@ -239,6 +278,10 @@ class Generator {
       let i = 0
       for (const groupField of Object.values(elementDict["_id"])) {
         let idField = groupField.replace('$', '')
+        if(addedFields.includes(idField)) {
+          return undefined
+        }
+
         if(Object.keys(previousSortDict).length > i) {
           let sortField = Object.keys(previousSortDict)[i]
           if (idField === sortField) {
@@ -257,6 +300,12 @@ class Generator {
       for (const key of Object.keys(firstOpFields)) {
         validSortFields[key] = 1
       }
+
+      // remove aliases
+      addedFields.forEach(function(alias) {
+        delete validSortFields[alias]     
+      }) 
+
       return new Index(name, validSortFields, aggregation.collection, "$group", order, {})
     }
   }
@@ -307,6 +356,14 @@ class Generator {
     } else {
       return undefined
     }
+  }
+
+  getAddedFields(stages) {
+    let addedFields = []
+    for (let stage of stages.filter(s => util.getAggregationStageOperator(s) == '$addFields')) {
+      Object.keys(stage['$addFields']).forEach(f => addedFields.push(f))
+    }
+    return addedFields
   }
 }
 

@@ -78,6 +78,7 @@
       "$limit": 10
     }
   ],
+  "collection": "customer",
   "allowDiskUse": true,
   "maxTimeMS": 0,
   "cursor": {}

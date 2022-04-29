@@ -119,7 +119,8 @@
     {
       "$sort": {"_id": 1}}
 ],
-	"allowDiskUse": true,
+"collection": "scale1",
+"allowDiskUse": true,
 	"maxTimeMS": 0,
   "cursor": {}
 }
