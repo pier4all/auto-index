@@ -1,0 +1,14 @@
+{
+  "aggregate": "s2-pqe-q2-customer",
+  "pipeline": [
+    {
+      "$match": {
+        "_id": 7
+      }
+    }
+  ],
+  "collection": "customer",
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}

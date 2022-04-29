@@ -1,0 +1,26 @@
+{
+  "aggregate": "s3-tpch-q3v1-orders-lineitem",
+  "collection": "orders-lineitem",
+  "pipeline": [
+    {
+      "$lookup": {
+        "from": "customer",
+        "localField": "o_custkey",
+        "foreignField": "_id",
+        "as": "customer"
+      }
+    },
+    {
+      "$unwind": "$customer"
+    },
+    {
+      "$project": {
+        "c_name": "$customer.c_name",
+        "o_orderdate": 1
+      }
+    }
+  ],
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}

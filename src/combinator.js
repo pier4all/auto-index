@@ -5,7 +5,6 @@ const util = require("./util")
 class Combinator {
     
     constructor(minimize=false) {
-    console.log('minimize', minimize)
       // leave it for options
       this.minimize = minimize
     }

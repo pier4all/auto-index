@@ -1,0 +1,16 @@
+{
+  "aggregate": "s2-pqe-q4v3-customer",
+  "collection": "customer",
+  "pipeline": [
+    {
+      "$match": {
+        "c_acctbal": {
+          "$lt": -10
+        }
+      }
+    }
+  ],
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}

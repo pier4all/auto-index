@@ -1,0 +1,26 @@
+{
+  "aggregate": "s2-pqe-q3v4-lineitem",
+  "collection": "lineitem",
+  "pipeline": [
+    {
+      "$lookup": {
+        "from": "orders",
+        "localField": "_id.l_orderkey",
+        "foreignField": "_id",
+        "as": "order"
+      }
+    },
+    {
+      "$unwind": "$order"
+    },
+    {
+      "$project": {
+        "_id": "$order._id",
+        "l_shipdate": 1
+      }
+    }
+  ],
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}

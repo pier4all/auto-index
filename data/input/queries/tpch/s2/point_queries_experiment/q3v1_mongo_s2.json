@@ -1,0 +1,26 @@
+{
+  "aggregate": "s2-pqe-q3v1-orders",
+  "pipeline": [
+    {
+      "$lookup": {
+        "from": "customer",
+        "localField": "o_custkey",
+        "foreignField": "_id",
+        "as": "customer"
+      }
+    },
+    {
+      "$unwind": "$customer"
+    },
+    {
+      "$project": {
+        "c_name": "$customer.c_name",
+        "o_orderdate": 1
+      }
+    }
+  ],
+  "collection": "orders",
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}

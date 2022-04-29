@@ -1,0 +1,37 @@
+{
+  "aggregate": "s1-pqe-q1v1_scale1",
+  "pipeline": [
+    {
+      "$unwind": "$c_orders"
+    },
+    {
+      "$project": {
+        "_id": 0,
+        "orders": "$c_orders"
+      }
+    },
+    {
+      "$match": {
+        "orders.o_orderkey": 7
+      }
+    },
+    {
+      "$unwind": "$orders.o_lineitems"
+    },
+    {
+      "$project": {
+        "lineitems": "$orders.o_lineitems"
+      }
+    },
+    {
+      "$unwind": "$lineitems"
+    },
+    {
+      "$replaceRoot": {
+        "newRoot": "$lineitems"}}
+  ],
+  "collection": "scale1",
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": { }
+}
