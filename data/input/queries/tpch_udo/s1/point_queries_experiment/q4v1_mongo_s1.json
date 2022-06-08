@@ -1,0 +1,16 @@
+{
+  "aggregate": "s1-pqe-q4v1_scale1",
+  "pipeline": [
+    {
+      "$match": {
+        "c_acctbal": {
+          "$lt": -10
+        }
+      }
+    }
+  ],
+  "collection": "scale1",
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}
