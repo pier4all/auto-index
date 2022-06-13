@@ -119,9 +119,7 @@ class Generator {
 
     // get aliases to avoid putting them in the index
     let addedFields = this.getAddedFields(aggregation.pipeline.slice(0, order))
-    addedFields.forEach(function(alias) {
-      delete indexKey[alias]     
-    }) 
+    indexKey = this.applyAliases(addedFields, indexKey) 
 
     // return fields index
     if (indexKey && Object.keys(indexKey).length>0) {
@@ -173,23 +171,20 @@ class Generator {
 
     const elementDict = stage[operator]
 
-    // get aliases to avoid putting them in the index
-    let addedFields = this.getAddedFields(aggregation.pipeline.slice(0, order))
-
+  
     let indexKey = {}
     // loop over match stage elements
     for (const [key, index] of Object.entries(elementDict)) {
       if (!key.startsWith('$')){
         if ((elementDict[key] == 1) || elementDict[key] == -1){
-          if(addedFields.includes(key)) {
-            break
-          }
-          else {
-            indexKey[key] = elementDict[key]          
-          }
+          indexKey[key] = elementDict[key]          
         }
       }
     }
+
+    // get aliases to avoid putting them in the index
+    let addedFields = this.getAddedFields(aggregation.pipeline.slice(0, order))
+    indexKey = this.applyAliases(addedFields, indexKey) 
 
     // return fields index
     if (indexKey && Object.keys(indexKey).length>0) {
@@ -250,19 +245,13 @@ class Generator {
         let groupIdFields = Object.values(elementDict["_id"])
         if (groupIdFields.length < 2) {
           let idField = groupIdFields[0].replace('$', '')
-          if(!addedFields.includes(idField)) {
-            let indexKey = {}
-            indexKey[idField] = 1
-            for (const key of Object.keys(firstOpFields)) {
-              if(!addedFields.includes(key)) {
-                indexKey[key] = 1          
-              }
-            }
-            return new Index(name, indexKey, aggregation.collection, "$group", order, {})
-          } else {
-            // TODO: check again if a compound index can be used (so far not used)
-            return undefined
+          let indexKey = {}
+          indexKey[idField] = 1
+          for (const key of Object.keys(firstOpFields)) {
+            indexKey[key] = 1          
           }
+          indexKey = this.applyAliases(addedFields, indexKey) 
+          return new Index(name, indexKey, aggregation.collection, "$group", order, {})
         } else {
           // TODO: check again if a compound index can be used (so far not used)
           return undefined
@@ -278,9 +267,6 @@ class Generator {
       let i = 0
       for (const groupField of Object.values(elementDict["_id"])) {
         let idField = groupField.replace('$', '')
-        if(addedFields.includes(idField)) {
-          return undefined
-        }
 
         if(Object.keys(previousSortDict).length > i) {
           let sortField = Object.keys(previousSortDict)[i]
@@ -301,11 +287,7 @@ class Generator {
         validSortFields[key] = 1
       }
 
-      // remove aliases
-      addedFields.forEach(function(alias) {
-        delete validSortFields[alias]     
-      }) 
-
+      validSortFields = this.applyAliases(addedFields, validSortFields) 
       return new Index(name, validSortFields, aggregation.collection, "$group", order, {})
     }
   }
@@ -358,12 +340,67 @@ class Generator {
     }
   }
 
+  // get the simple alias for existing database fields that can still be used by an index
+  // TODO compound indexes
+  parseAlias(alias, reference, previous) {
+    if(typeof(reference) == 'string' && reference.startsWith('$')) {
+      let field = reference.substring(1)
+      let fieldRoot = field.split('.')[0]
+      if(previous[field]) {
+        previous[alias] = previous[field] 
+      } else if (previous[fieldRoot]) {
+        previous[alias] = previous[fieldRoot] + reference.substring(fieldRoot.length + 1)
+      } else {
+        previous[alias] = field 
+      }
+    } else {
+      previous[alias] = undefined
+    }
+    // console.log(previous)
+
+  }
+
+  // return an alias dictionary to still use some fields
+  // BAD haas to replace stages one by one as there can be a mix of project and addFields
   getAddedFields(stages) {
-    let addedFields = []
-    for (let stage of stages.filter(s => util.getAggregationStageOperator(s) == '$addFields')) {
-      Object.keys(stage['$addFields']).forEach(f => addedFields.push(f))
+    let addedFields = {}
+
+    for (let stage of stages.filter(s => util.getAggregationStageOperator(s) == '$addFields' || util.getAggregationStageOperator(s) == '$project')) {
+      if (util.getAggregationStageOperator(stage) == '$addFields') {
+        Object.keys(stage['$addFields']).forEach(f => this.parseAlias(f, stage['$addFields'][f], addedFields))
+      } else {
+        Object.keys(stage['$project']).forEach(f => { if (stage['$project'][f] != 0 && stage['$project'][f] != 1 ) 
+        { this.parseAlias(f, stage['$project'][f], addedFields)}})
+      }
     }
     return addedFields
+  }
+
+  applyAliases(addedFields, indexKey) {
+
+    Object.keys(addedFields).forEach(function(alias) {
+      if (!addedFields[alias] ) {
+        for (let key of Object.keys(indexKey)){
+          if (key.split('.')[0] === alias) {
+            console.log("\t ! Deleting ", alias, 'to', addedFields[alias])
+            delete indexKey[key]  
+          }
+        }
+      } else {
+        // console.log("\t ! Renaming ", alias, 'to', addedFields[alias])
+        let renamedKey = {}
+        for (let key of Object.keys(indexKey)){
+          if (key.split('.')[0] === alias) {
+            renamedKey[key.replace(alias, addedFields[alias], 1)] = indexKey[key]
+          } else {
+            renamedKey[key] = indexKey[key]
+          }
+        }
+        indexKey = renamedKey
+      }
+    }) 
+
+  return indexKey
   }
 }
 

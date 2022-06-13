@@ -1,0 +1,27 @@
+{
+    "aggregate":"custom-06",
+    "pipeline":[
+      {
+        "$project" :{
+          "lines": "$edges",
+          "color":1
+        }
+      }, {
+        "$addFields" :{
+          "color": "none",
+          "numedges": "$lines.count"
+        }
+      },
+      {
+        "$match":{
+          "lines.size": 5,
+          "numedges": {"$gt": 2},
+          "color": "none"
+        }
+      }
+    ],
+    "collection": "figures",
+    "allowDiskUse":true,
+    "maxTimeMS":0,
+    "cursor":{}
+}

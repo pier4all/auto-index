@@ -44,8 +44,13 @@ const jsonAggGroupAliases1 = JSON.stringify({ "aggregate": "test_group_alias1", 
 const jsonAggGroupAliases2 = JSON.stringify({ "aggregate": "test_group_alias2", "collection": "test_collection", "pipeline": [{"$addFields": {"age": "$o.age"}}, {"$sort": { "x" : 1, "age": 1}}, {"$group": {"_id": { "x" : "$x" },"y": { "$first" : "$age" }}}]})
 const jsonAggGroupAliases3 = JSON.stringify({ "aggregate": "test_group_alias3", "collection": "test_collection", "pipeline": [{"$addFields": {"age": "$o.age"}}, {"$sort": { "x" : 1, "age": 1}}, {"$group": {"_id": { "x" : "$age" },"y": { "$first" : "$y" }}}]})
 const jsonAggGroupAliases4 = JSON.stringify({ "aggregate": "test_group_alias3", "collection": "test_collection", "pipeline": [{"$addFields": {"age": "$o.age"}}, {"$group": {"_id": { "x" : "$x" },"y": { "$first" : "$age" }}}]})
+const jsonMatchMultipleAliases1 = JSON.stringify({ "aggregate": "test_mult_aliases", "collection": "test_collection", "pipeline": [{"$addFields": {"salary": 10}}, {"$addFields": {"age": "$o.age"}}, {"$addFields": {"years": "$age"}}, {"$match": {"years": 35, "salary": 5 }}], "allowDiskUse":true})
+const jsonMatchMultipleAliases2 = JSON.stringify({ "aggregate": "test_mult_aliases", "collection": "test_collection", "pipeline": [{"$project": {"salary": "$payment"}}, {"$project": {"age": "$o.age", "billed": 0}}, {"$addFields": {"years": "$age"}}, {"$match": {"years": 35, "salary": 5 }}], "allowDiskUse":true})
+const jsonMatchPartialAliases = JSON.stringify({ "aggregate": "test_part_aliases", "collection": "test_collection", "pipeline": [{ "$project" :{ "lines": "$edges", "color":1 } }, { "$addFields" :{ "color": "none",  "numedges": "$lines.count" } }, { "$match":{ "lines.size": 5, "numedges": {"$gt": 2},  "color": "none" }}], "allowDiskUse":true})
 
-// test initialization
+
+
+    // test initialization
 tap.before(async function() { 
 
 })
@@ -315,20 +320,25 @@ tap.test('generate no index for match sort stages with fields from aliases', asy
 
   const indexes = generator.generateIndexes(aggregation)
 
-  childTest.equal(indexes.length, 0)
+  childTest.equal(indexes.length, 2)
+
+
   
   childTest.end()
 })
 
-tap.test('generate no index for group stage with id field from alias', async (childTest) => {
+tap.test('generate index for group stage with id field from alias', async (childTest) => {
   const aggregation = Aggregation.fromJSON(jsonAggGroupAliases1)
    
   const generator = new Generator()
 
   const indexes = generator.generateIndexes(aggregation)
 
-  childTest.equal(indexes.length, 0)
+  childTest.equal(indexes.length, 1)
   
+  const expectedIndexGroupKey = {"o.age":1,"y":1}
+  childTest.equal(JSON.stringify(indexes[0].key), JSON.stringify(expectedIndexGroupKey))
+
   childTest.end()
 })
 
@@ -342,10 +352,10 @@ tap.test('generate no index for group stage with id field from alias', async (ch
 
   childTest.equal(indexes.length, 2)
   
-  const expectedIndexSort =  {"name":"test_group_alias2_test_collection_sort_1","key":{"x":1},"collection":"test_collection","operator":"$sort","order":1,"options":{}}  
+  const expectedIndexSort = {"name":"test_group_alias2_test_collection_sort_1","key":{"x":1,"o.age":1},"collection":"test_collection","operator":"$sort","order":1,"options":{}}
   childTest.equal(JSON.stringify(indexes[0]), JSON.stringify(expectedIndexSort))
 
-  const expectedIndexGroup = {"name":"test_group_alias2_test_collection_group_2","key":{"x":1},"collection":"test_collection","operator":"$group","order":2,"options":{}} 
+  const expectedIndexGroup = {"name":"test_group_alias2_test_collection_group_2","key":{"x":1,"o.age":1},"collection":"test_collection","operator":"$group","order":2,"options":{}}
   childTest.equal(JSON.stringify(indexes[1]), JSON.stringify(expectedIndexGroup))
 
   childTest.end()
@@ -363,7 +373,7 @@ tap.test('generate no index for group stage with id field from alias and previou
   childTest.end()
 })
 
-tap.test('generate index for group stage should not include first field from alias', async (childTest) => {
+tap.test('generate index for group stage should includes first field from alias', async (childTest) => {
   const aggregation = Aggregation.fromJSON(jsonAggGroupAliases4)
    
   const generator = new Generator()
@@ -371,10 +381,45 @@ tap.test('generate index for group stage should not include first field from ali
   const indexes = generator.generateIndexes(aggregation)
 
   childTest.equal(indexes.length, 1)
-  childTest.equal(JSON.stringify(indexes[0].key), JSON.stringify({"x": 1}))
+  childTest.equal(JSON.stringify(indexes[0].key), JSON.stringify({"x": 1,"o.age":1}))
   childTest.end()
 })
 
+tap.test('generate index for match stage with multiple aliases uses original field', async (childTest) => {
+  const aggregation = Aggregation.fromJSON(jsonMatchMultipleAliases1)
+   
+  const generator = new Generator()
+
+  const indexes = generator.generateIndexes(aggregation)
+
+  childTest.equal(indexes.length, 1)
+  childTest.equal(JSON.stringify(indexes[0].key), JSON.stringify({"o.age": 1}))
+  childTest.end()
+})
+
+tap.test('generate index for match stage with multiple aliases from project operator uses original fields', async (childTest) => {
+  const aggregation = Aggregation.fromJSON(jsonMatchMultipleAliases2)
+   
+  const generator = new Generator()
+
+  const indexes = generator.generateIndexes(aggregation)
+
+  childTest.equal(indexes.length, 1)
+  childTest.equal(JSON.stringify(indexes[0].key), JSON.stringify({"o.age": 1,"payment":1}))
+  childTest.end()
+})
+
+tap.test('generate index for match stage with multiple aliases on subfields uses original fields', async (childTest) => {
+  const aggregation = Aggregation.fromJSON(jsonMatchPartialAliases)
+   
+  const generator = new Generator()
+
+  const indexes = generator.generateIndexes(aggregation)
+
+  childTest.equal(indexes.length, 1)
+  childTest.equal(JSON.stringify(indexes[0].key), JSON.stringify({"edges.size":1,"edges.count":1}))
+  childTest.end()
+})
 
 // test cleanup
 tap.teardown(async function() { 

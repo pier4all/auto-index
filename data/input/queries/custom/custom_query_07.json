@@ -1,0 +1,13 @@
+{
+    "aggregate":"custom-07",
+    "pipeline":[
+      {"$addFields": {"age": "$o.age", "salary": "$o.payment"}}, 
+      {"$addFields": {"years": "$age"}}, 
+      {"$match": {"years": 35}}, 
+      {"$sort": {"salary": 1, "x": -1}}
+    ],
+    "collection": "figures",
+    "allowDiskUse":true,
+    "maxTimeMS":0,
+    "cursor":{}
+}
