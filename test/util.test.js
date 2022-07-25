@@ -17,10 +17,12 @@ tap.test('get aggregations from directory', async (childTest) => {
 
   let aggregationDefaultCollection = aggregations.find(element => element.name === "test-aggregation-no-coll");
   let aggregationWithCollection = aggregations.find(element => element.name === "test-aggregation-from-file");
+  let aggregationFromQuery = aggregations.find(element => element.name === "test-query-01");
   
-  childTest.equal(aggregations.length, 3)
+  childTest.equal(aggregations.length, 4)
   childTest.equal(aggregationDefaultCollection.collection, defaultCollection)
   childTest.equal(aggregationWithCollection.collection, "test_collection")
+  childTest.equal(aggregationFromQuery.pipeline.length, 2)
   childTest.end()
 })
 
@@ -32,7 +34,7 @@ tap.test('get aggregations from directory without default collection', async (ch
 
   childTest.equal(aggregationDefaultCollection.collection, undefined)
   childTest.equal(aggregationWithCollection.collection, "test_collection")
-  childTest.equal(aggregations.length, 3)
+  childTest.equal(aggregations.length, 4)
   childTest.end()
 })
 

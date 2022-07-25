@@ -1,0 +1,15 @@
+{
+  "name":"test-query-01",
+  "query":{
+      "color": "red",
+      "round": false
+  },
+  "sort": {
+     "shape":1,
+     "size":1
+  },
+  "collection": "figures",
+  "allowDiskUse":true,
+  "maxTimeMS":0,
+  "cursor":{}
+}

@@ -5,29 +5,29 @@ function main() {
   const Combinator = require('./src/combinator')
   const Cleaner = require('./src/cleaner')
 
-  let minimize = false
+  let minimize = true
   console.log('minimize', minimize)
 
-  // const inputQueries = ["./data/input/queries/datagen"] //process.argv[1]
-  // const inputQueries = ["./data/input/queries/custom"] //process.argv[1]
+  // const inputQueries = ["./data/input/pipelines/datagen"] //process.argv[1]
+  // const inputQueries = ["./data/input/pipelines/custom"] //process.argv[1]
   const inputQueries = [
-                        "./data/input/queries/custom/current",
-                        // "./data/input/queries/custom",
-                        // "./data/input/queries/datagen",
-                        // "./data/input/queries/tpch/s1/point_queries_experiment",
-                        // "./data/input/queries/tpch/s1/tpch_experiment",
-                        // "./data/input/queries/tpch/s2/point_queries_experiment",
-                        // "./data/input/queries/tpch/s2/tpch_experiment",
-                        // "./data/input/queries/tpch/s3/point_queries_experiment",
-                        // "./data/input/queries/tpch/s3/tpch_experiment",
-                        // "./data/input/queries/tpch_udo/s1/point_queries_experiment",
-                        // "./data/input/queries/tpch_udo/s2/point_queries_experiment",
-                        // "./data/input/queries/tpch_udo/s3/point_queries_experiment",
-                        // "./data/input/queries/tpch_udo/s1/tpch_experiment",
-                        // "./data/input/queries/tpch_udo/s2/tpch_experiment",
-                        // "./data/input/queries/tpch_udo/s3/tpch_experiment",
-                        // "./data/input/queries/hr/normalized",
-                        // "./data/input/queries/hr/denormalized"
+                        "./data/input/queries/custom",
+                        // "./data/input/pipelines/custom",
+                        // "./data/input/pipelines/datagen",
+                        // "./data/input/pipelines/tpch/s1/point_queries_experiment",
+                        // "./data/input/pipelines/tpch/s1/tpch_experiment",
+                        // "./data/input/pipelines/tpch/s2/point_queries_experiment",
+                        // "./data/input/pipelines/tpch/s2/tpch_experiment",
+                        // "./data/input/pipelines/tpch/s3/point_queries_experiment",
+                        // "./data/input/pipelines/tpch/s3/tpch_experiment",
+                        // "./data/input/pipelines/tpch_udo/s1/point_queries_experiment",
+                        // "./data/input/pipelines/tpch_udo/s2/point_queries_experiment",
+                        // "./data/input/pipelines/tpch_udo/s3/point_queries_experiment",
+                        // "./data/input/pipelines/tpch_udo/s1/tpch_experiment",
+                        // "./data/input/pipelines/tpch_udo/s2/tpch_experiment",
+                        // "./data/input/pipelines/tpch_udo/s3/tpch_experiment",
+                        // "./data/input/pipelines/hr/normalized",
+                        // "./data/input/pipelines/hr/denormalized"
                       ] //process.argv[1]
 
     let queries = []
@@ -43,6 +43,7 @@ function main() {
       queries = queries.concat(dirQueries)
 
     }
+    console.log(queries[0].pipeline)
 
     console.log(" - Read ", queries.length, " queries\n")
 

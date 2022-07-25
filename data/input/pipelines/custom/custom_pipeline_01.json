@@ -1,0 +1,29 @@
+{
+    "aggregate":"custom-01",
+    "pipeline":[
+      {
+        "$match":{
+          "color": "red"
+        }
+      },
+      {
+        "$sort":{
+          "shape":1
+        }
+      },
+      {
+        "$sort":{
+          "size":1
+        }
+      },
+      {
+        "$match":{
+          "round": false
+        }
+      }
+    ],
+    "collection": "figures",
+    "allowDiskUse":true,
+    "maxTimeMS":0,
+    "cursor":{}
+}

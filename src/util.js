@@ -1,6 +1,7 @@
 const fs = require('fs')
 var path = require('path');
-const Aggregation = require('./aggregation')
+const Aggregation = require('./aggregation');
+const Query = require('./query');
 
 exports.getAggregationsFromDir = (inputDir, defaultCollection = undefined) => {
 
@@ -9,7 +10,12 @@ exports.getAggregationsFromDir = (inputDir, defaultCollection = undefined) => {
     let dirent
     while ((dirent = dir.readSync()) !== null) {
       if (dirent.name.endsWith(".json")) {
-        const aggregation = Aggregation.fromFile(path.join(inputDir, dirent.name))
+        let aggregation = Aggregation.fromFile(path.join(inputDir, dirent.name))
+
+        if (! aggregation.pipeline || aggregation.pipeline.length == 0) {
+          aggregation = Query.fromFile(path.join(inputDir, dirent.name)).toAggregation()
+        }
+
         aggregation.collection = aggregation.collection || defaultCollection
         queries.push(aggregation)
       }
