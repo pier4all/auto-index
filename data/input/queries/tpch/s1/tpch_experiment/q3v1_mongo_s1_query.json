@@ -1,0 +1,25 @@
+{
+  "name": "s1-tpch-q3v1-scale1-query-part",
+  "query": {
+    "c_mktsegment": "AUTOMOBILE"
+  },
+  "project": {
+      "c_mktsegment": 1,
+      "c_orders": {
+        "$filter": {
+          "input": "$c_orders",
+          "as": "o",
+          "cond": {
+            "$lt": [
+              "$$o.o_orderdate",
+              "ISODate('1992-01-02T00:00:00Z')"
+            ]
+          }
+        }
+      }
+  },
+  "collection": "scale1",
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}

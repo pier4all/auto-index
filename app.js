@@ -5,13 +5,15 @@ function main() {
   const Combinator = require('./src/combinator')
   const Cleaner = require('./src/cleaner')
 
-  let minimize = true
+  let minimize = false
   console.log('minimize', minimize)
 
   // const inputQueries = ["./data/input/pipelines/datagen"] //process.argv[1]
   // const inputQueries = ["./data/input/pipelines/custom"] //process.argv[1]
   const inputQueries = [
-                        "./data/input/queries/custom",
+                      "./data/input/queries/tpch/s1/tpch_experiment",
+                      "./data/input/queries/tpch/s1/point_queries_experiment",
+                        // "./data/input/queries/custom",
                         // "./data/input/pipelines/custom",
                         // "./data/input/pipelines/datagen",
                         // "./data/input/pipelines/tpch/s1/point_queries_experiment",

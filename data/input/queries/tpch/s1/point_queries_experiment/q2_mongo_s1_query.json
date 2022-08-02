@@ -1,0 +1,10 @@
+{
+  "name":"s1-pqe-q2_scale1-query",
+  "query":{
+    "_id": 7
+  },
+  "collection": "scale1",
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}

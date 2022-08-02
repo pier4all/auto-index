@@ -1,0 +1,13 @@
+{
+  "aggregate": "s1-tpch-q3v3-scale1-query-part",
+  "query": {
+    "c_mktsegment": "AUTOMOBILE",
+    "c_orders.o_lineitems.l_shipdate": {
+      "$gt": "ISODate('1992-01-02T00:00:00Z')"
+    }
+  },
+  "collection": "scale1",
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}
