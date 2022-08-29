@@ -1,0 +1,22 @@
+{
+  "name": "s3-tpch-q22-customer_query",
+  "query": {
+      "c_acctbal": {
+        "$gt": 0.0
+      }
+    },
+  "project": {
+    "c_acctbal": 1,
+    "cntrycode": {
+      "$substr": [
+        "$c_phone",
+        0,
+        2
+      ]
+    }
+  },
+  "collection": "customer",
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}

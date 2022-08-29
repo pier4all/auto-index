@@ -1,0 +1,20 @@
+{
+  "name": "s3-tpch-q1-orders-lineitem_query",
+  "collection": "orders-lineitem",
+  "project": {
+      "lineitems": {
+        "$filter": {
+          "input": "$o_lineitems",
+          "as": "l",
+          "cond": {
+            "$lte": [
+              "$$l.l_shipdate", "ISODate('1992-01-02T00:00:00Z')"
+          ]
+        }
+      }
+    }
+  },
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}

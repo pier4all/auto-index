@@ -1,0 +1,10 @@
+{
+  "name": "s3-tpch-q13-customer_name_query",
+  "collection": "customer",
+  "project": {
+      "_id": 1
+    },
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}

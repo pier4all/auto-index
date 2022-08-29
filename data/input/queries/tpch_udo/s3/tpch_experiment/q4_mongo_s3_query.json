@@ -1,0 +1,28 @@
+{
+  "name": "s3-tpch-q4-orders-lineitem_query",
+  "collection": "orders-lineitem",
+  "query": {
+    "o_orderdate": {
+      "$gte": "ISODate('1992-01-01T00:00:00Z')",
+      "$lt": "ISODate('1992-04-01T00:00:00Z')"
+    }
+  },
+  "project": {
+    "orderpriority": "$o_orderpriority",
+    "lineitems": {
+      "$filter": {
+        "input": "$o_lineitems",
+        "as": "l",
+        "cond": {
+          "$lt": [
+            "$$l.l_commitdate",
+            "$$l.l_receiptdate"
+          ]
+        }
+      }
+    }
+  },
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}

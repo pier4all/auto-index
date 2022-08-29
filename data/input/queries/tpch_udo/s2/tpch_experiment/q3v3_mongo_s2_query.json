@@ -1,0 +1,12 @@
+{
+  "name": "s2-tpch-q3v3-lineitem_query",
+  "query": {
+    "l_shipdate": {
+      "$gt": "ISODate('1992-01-02T00:00:00Z')"
+    }
+  },
+  "collection": "lineitem",
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}

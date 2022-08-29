@@ -1,0 +1,53 @@
+{
+  "name": "s3-tpch-q12-orders-lineitem_query",
+  "collection": "orders-lineitem",
+  "project": {
+      "orderpriority": "$o_orderpriority",
+      "lineitems": {
+        "$filter": {
+          "input": "$o_lineitems",
+          "as": "l",
+          "cond": {
+            "$and": [
+              {
+                "$in": [
+                  "$$l.l_shipmode",
+                  [
+                    "RAIL",
+                    "REG AIR"
+                  ]
+                ]
+              },
+              {
+                "$lt": [
+                  "$$l.l_commitdate",
+                  "$$l.l_receiptdate"
+                ]
+              },
+              {
+                "$lt": [
+                  "$$l.l_shipdate",
+                  "$$l.l_commitdate"
+                ]
+              },
+              {
+                "$gte": [
+                  "$$l.l_receiptdate",
+                  "ISODate('1992-01-01T00:00:00Z')"
+                ]
+              },
+              {
+                "$lt": [
+                  "$$l.l_receiptdate",
+                  "ISODate('1993-01-01T00:00:00Z')"
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}

@@ -1,0 +1,10 @@
+{
+  "name": "s3-tpch-q3v2-customer_query",
+  "query": {
+    "c_mktsegment": "AUTOMOBILE"
+  },
+  "collection": "customer",
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}

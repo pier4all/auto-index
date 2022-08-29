@@ -1,0 +1,12 @@
+{
+  "name": "s2-tpch-q3v1-orders_query",
+  "query": {
+    "o_orderdate": {
+      "$lt": "ISODate('1992-01-02T00:00:00Z')"
+    }
+  },
+  "collection": "orders",
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}

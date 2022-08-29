@@ -1,0 +1,12 @@
+{
+  "name": "s2-pqe-q4v1-customer_query",
+  "query": {
+    "c_acctbal": {
+      "$lt": -10
+    }
+  },
+  "collection": "customer",
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}

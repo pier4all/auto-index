@@ -1,0 +1,10 @@
+{
+  "name": "s2-pqe-q2-customer_query",
+  "query": {
+    "_id": 7
+  },
+  "collection": "customer",
+  "allowDiskUse": true,
+  "maxTimeMS": 0,
+  "cursor": {}
+}
