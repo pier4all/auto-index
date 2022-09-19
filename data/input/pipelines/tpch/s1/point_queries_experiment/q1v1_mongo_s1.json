@@ -1,5 +1,5 @@
 {
-  "aggregate": "s1-pqe-q1v1_scale1",
+  "aggregate": "s1-pqe-q1v1-scale1",
   "pipeline": [
     {
       "$unwind": "$c_orders"

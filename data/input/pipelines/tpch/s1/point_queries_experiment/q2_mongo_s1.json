@@ -1,5 +1,5 @@
 {
-  "aggregate": "s1-pqe-q2_scale1",
+  "aggregate": "s1-pqe-q2-scale1",
   "pipeline": [
     {
       "$match": {

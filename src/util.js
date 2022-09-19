@@ -3,6 +3,7 @@ var path = require('path');
 const Aggregation = require('./aggregation');
 const Query = require('./query');
 
+
 exports.getAggregationsFromDir = (inputDir, defaultCollection = undefined) => {
 
     const dir = fs.opendirSync(inputDir)
@@ -46,4 +47,26 @@ exports.removeIndexFromArray = (array, key, value) => {
       ...array.slice(0, index),
       ...array.slice(index + 1)
   ] : array;
+}
+
+exports.writeIndexResults = (array, ouptputDir) => {
+
+  const indexFileName = 'indexes_' + new Date().toISOString().replace('T', '_').replace(/:/g, '-').split('.')[0] + '.json';
+  const indexFilePath = path.join(ouptputDir, indexFileName);
+
+  let  mongoIndexes = []
+  let text = "["
+
+  for (let index of array){
+    text += JSON.stringify(index.toMongoJSON(), null, 2)
+    text += ",\n"
+    mongoIndexes.push(index.toMongoJSON())
+  }
+  text += "]"
+
+  fs.appendFileSync(indexFilePath, text)
+
+  console.log(text)
+  return mongoIndexes
+
 }

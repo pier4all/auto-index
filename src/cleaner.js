@@ -54,10 +54,20 @@ class Cleaner {
         return false
     }
 
+    isIdIndex(index) {
+        let key = Object.keys(index.key).map((k) => [k, index.key[k]]);
+        for (let index_key of key) {
+            if (index_key[0] == '_id') {
+                return true
+            }
+        }
+        return false
+    }
+
     clean(indexes) {
         // remove redundant indexes from an index set
         let collections = [...new Set(indexes.map(function(i) {return i.collection}))]
-
+        
         // remove duplicates
         let cleanedIndexes = []
         for (let collection of collections){
@@ -70,7 +80,7 @@ class Cleaner {
             })
             
             for (let index of collection_indexes) {
-                if (! this.isDuplicateKey(index, cleanedIndexes)) {
+                if ((! this.isDuplicateKey(index, cleanedIndexes)) & (! this.isIdIndex(index))) {
                     cleanedIndexes.push(index)
                 }
             }        

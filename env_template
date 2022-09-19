@@ -1,0 +1,19 @@
+#Save to .env after replacing all {x} with your credentials
+
+#Database information (required)
+DB_URI=mongodb://localhost:27017
+
+
+#Insert name of Database
+DB_NAME=tcph-dbgen
+
+# input query directory
+INPUT=input/tpch/s1/point_queries_experiment
+#INPUT=input/tpch/s1/tpch_experiment
+
+# input index file
+INDEX=input/tpch/s1/index_s1.json
+
+
+# output directory
+OUTPUT=output
