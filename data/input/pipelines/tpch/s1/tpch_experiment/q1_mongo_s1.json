@@ -11,10 +11,9 @@
             "input": "$c_orders.o_lineitems",
             "as": "l",
             "cond": {
-              "$lte": [
-                "$$l.l_shipdate",
-                "new Date(ISODate('1992-04-30T00:00:00Z').getTime() - 119*24*3600*1000)"
-              ]
+              "$lte": ["$$l.l_shipdate", {"$toDate": 
+                      {"$subtract": [{"$toLong": {"$toDate": "1992-04-30T00:00:00Z"}}, 10281600000]}
+              }]
             }
           }
         }

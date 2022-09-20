@@ -2,9 +2,12 @@
   "aggregate": "s2-tpch-q3v1-orders",
   "pipeline": [
     {
-      "$match": {
-        "o_orderdate": {
-          "$lt": "ISODate('1992-01-02T00:00:00Z')"
+      "$match": {    
+        "$expr": {
+          "$lt": [
+            "$o_orderdate",
+            {"$toDate": "1992-01-02T00:00:00Z"}
+          ]
         }
       }
     },
@@ -41,7 +44,7 @@
             "cond": {
               "$gt": [
                 "$$l.l_shipdate",
-                "ISODate('1992-01-02T00:00:00Z')"
+                {"$toDate": "1992-01-02T00:00:00Z"}
               ]
             }
           }

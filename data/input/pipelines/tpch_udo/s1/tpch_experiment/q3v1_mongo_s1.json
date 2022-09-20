@@ -7,17 +7,14 @@
       }
     },
     {
-      "$project": {
+      "$project":{
         "c_mktsegment": 1,
         "c_orders": {
           "$filter": {
             "input": "$c_orders",
             "as": "o",
             "cond": {
-              "$lt": [
-                "$$o.o_orderdate",
-                "ISODate('1992-01-02T00:00:00Z')"
-              ]
+              "$lt": ["$$o.o_orderdate", {"$toDate": "1992-01-02T00:00:00Z"}]
             }
           }
         }

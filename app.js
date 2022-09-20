@@ -67,7 +67,7 @@ async function main() {
   console.log()
 
   let indexResults = util.writeIndexResults(allIndexes, outputDirectory)
-  console.log(indexResults)
+  // console.log(indexResults)
 
   await checkIndexes(queries, indexResults)
 

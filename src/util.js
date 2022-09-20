@@ -66,7 +66,7 @@ exports.writeIndexResults = (array, ouptputDir) => {
 
   fs.appendFileSync(indexFilePath, text)
 
-  console.log(text)
+  // console.log(text)
   return mongoIndexes
 
 }

@@ -21,43 +21,28 @@
     },
     {
       "$match": {
-        "$and": [
-          {
+          "$and": [{
             "lineitems.l_shipmode": {
-              "$in": [
-                "RAIL",
-                "REG AIR"
-              ]
+              "$in": ["RAIL", "REG AIR"]
             }
-          },
-          {
+          }, {
             "$expr": {
-              "$lt": [
-                "$lineitems.l_commitdate",
-                "$lineitems.l_receiptdate"
-              ]
+              "$lt": ["$lineitems.l_commitdate", "$lineitems.l_receiptdate"]
             }
-          },
-          {
+          }, {
             "$expr": {
-              "$lt": [
-                "$lineitems.l_shipdate",
-                "$lineitems.l_commitdate"
-              ]
+              "$lt": ["$lineitems.l_shipdate", "$lineitems.l_commitdate"]
             }
-          },
-          {
-            "lineitems.l_receiptdate": {
-              "$gte": "ISODate('1992-01-01T00:00:00Z')"
+          }, {
+            "$expr": {
+              "$gte": ["$lineitems.l_receiptdate", {"$toDate": "1992-01-01T00:00:00Z"}]
             }
-          },
-          {
-            "lineitems.l_receiptdate": {
-              "$lt": "ISODate('1993-01-01T00:00:00Z')"
+          }, {
+            "$expr": {
+              "$lt": ["$lineitems.l_receiptdate", {"$toDate": "1993-01-01T00:00:00Z"}]
             }
-          }
-        ]
-      }
+          }]
+        }
     },
     {
       "$project": {

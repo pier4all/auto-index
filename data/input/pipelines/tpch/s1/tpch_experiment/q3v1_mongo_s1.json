@@ -14,10 +14,7 @@
             "input": "$c_orders",
             "as": "o",
             "cond": {
-              "$lt": [
-                "$$o.o_orderdate",
-                "ISODate('1992-01-02T00:00:00Z')"
-              ]
+              "$lt": ["$$o.o_orderdate", {"$toDate": "1992-01-02T00:00:00Z"}]
             }
           }
         }
@@ -39,9 +36,9 @@
     },
     {
       "$match": {
-        "lineitems.l_shipdate": {
-          "$gt": "ISODate('1992-01-02T00:00:00Z')"
-        }
+          "$expr": {
+            "$gt": ["$lineitems.l_shipdate", {"$toDate": "1992-01-02T00:00:00Z"}]
+          }
       }
     },
     {

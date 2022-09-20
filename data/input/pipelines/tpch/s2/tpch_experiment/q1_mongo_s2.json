@@ -4,9 +4,9 @@
   "pipeline": [
     {
       "$match": {
-        "l_shipdate": {
-          "$lte": "1992-01-02T00:00:00Z"
-        }
+          "$expr": {
+            "$lte": ["$l_shipdate", {"$toDate": "1992-01-02T00:00:00Z"}]
+          }
       }
     },
     {

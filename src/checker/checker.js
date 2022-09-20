@@ -56,15 +56,18 @@ exports.checkIndexes = async (queries, indexes) => {
                 console.log('   Checking stats ...')
                 const id_start = process.hrtime();
                 const query_res = await query_collection.aggregate(pipeline).toArray();
-                // console.log("Query Results:", JSON.stringify(query_res).substr(0, 100), '...', query_res.length);
                 const index_stats = await index_collection.aggregate([{'$indexStats':{}}]).toArray();
                 const id_duration = utils.logTimer(id_start);
-                const index_usage = await parseIndexStats(index_stats, index_name);
+                let index_usage = await parseIndexStats(index_stats, index_name);
+                if (query_res.length == 0) {
+                    console.log('ZERO_RESULTS: No results in query')
+                    index_usage =  undefined
+                }
                 console.log('\t ... stats result:', index_usage)
                 // console.log("Index stats:", JSON.stringify(index_stats));
 
                 //Logging results in report file 
-                console.log('REPORT', aggregation_name, index_name, index_collection.collectionName, exp_usage, index_usage, exp_duration, id_duration, aggregation_name.split('-')[0] )
+                // console.log('REPORT', aggregation_name, index_name, index_collection.collectionName, exp_usage, index_usage, exp_duration, id_duration, aggregation_name.split('-')[0] )
                 utils.appendReport(aggregation_name, index_name, index_collection.collectionName, exp_usage, index_usage, exp_duration, id_duration, aggregation_name.split('-')[0] );
                 
                 index_summary[index_name] ={"explain": index_summary[index_name]["explain"] ? index_summary[index_name]["explain"] : exp_usage, "collection": index_collection.collectionName,
