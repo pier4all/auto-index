@@ -3,12 +3,19 @@
   "pipeline":[
     {
       "$match": {
-        "ref-employee": "{$EMPLOYEE}", 
-        "date": {
-          "$gte": "{$START_DATE}", 
-          "$lt": "{$END_DATE}"
+        "$and": [
+          {
+            "$expr": {"$eq": ["$ref-employee", 
+              {"$toObjectId": "60a17c017c75ab7cd56da552"}]}
+          },{  
+            "$expr": {"$gte": ["$date", 
+              {"$toDate": "2020-07-13T00:00:00.000+00:00"}]}
+          },
+             {  
+            "$expr": {"$lt": ["$date", 
+              {"$toDate": "2020-07-20T23:00:00.000+00:00"}]}
+          } ]
         }
-      } 
     }, {
       "$group": {
         "_id": "$ref-project",

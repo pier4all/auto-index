@@ -35,11 +35,14 @@ class Aggregation {
                         for (let field of Object.keys(stage)) {
                             for (let operator of Object.keys(stage[field])) {
                                 for (let text of Object.keys(stage[field][operator])) {
-                                    if ((typeof stage[field][operator][text] === 'string' || stage[field][operator][text] instanceof String)
+                                    if ((typeof stage[field][operator][text] === 'string' )//|| stage[field][operator][text] instanceof String)
                                     & (stage[field][operator][text].includes("ISODate"))) {
                                         let date_text = stage[field][operator][text].match(/\(([^)]+)\)/)[1].trim().slice(1, -1).trim()
-                                        stage[field][operator][text] = new Date(date_text)
-                                        console.log( " * INFO: Fixed ISODate ", name, stage[field][operator][text])
+                                        let dateObject = new Date(date_text)
+                                        if (dateObject instanceof Date && !isNaN(dateObject)) {
+                                            stage[field][operator][text] = dateObject
+                                            console.log( " * INFO: Fixed ISODate ", name, stage[field][operator][text])
+                                        }
                                     }
                                 }
                             }
@@ -48,7 +51,7 @@ class Aggregation {
                 }
             } catch { }
 
-            if (JSON.stringify(pipeline).includes(pipeline)) {
+            if (JSON.stringify(pipeline).includes("ISODate")) {
                 console.warn("Pipeline contains ISODate (not compatible) ", name)
             }
          }

@@ -2,8 +2,10 @@
   "aggregate":"datagen-08-aggregate-timesheets-by-project",
   "pipeline":[
     {
-      "$match":{
-        "ref-project": "{$PROJECT_ID}"
+      "$match": 
+      { "$expr": { "$eq": [
+          "$ref-project", {"$toObjectId": "60a17c017785647cd7b1f931"}] 
+        }
       }
     },
     {
@@ -13,7 +15,7 @@
             {
               "$multiply":[
                 "$quantity",
-                "{$QUANTITY}"
+                5
               ]
             },
             1

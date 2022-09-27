@@ -6,10 +6,12 @@
         "price":{
           "$multiply":[
             "$quantity",
-            "{$QUANTITY}"
+            5
           ]
         }
       }
+    },{
+      "$limit": 1000
     },
     {
       "$group":{

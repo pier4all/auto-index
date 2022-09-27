@@ -1,0 +1,22 @@
+{
+  "aggregate":"custom-08",
+  "pipeline":[
+    { "$match":
+      {
+        "$expr": {"$eq": ["$username", "lucia.espona@fhnw.ch"]}
+      }
+    }, { "$match":
+      {
+        "$expr": { "$eq" : ["admin", "$username"]}
+      }
+    }, { "$match":
+      {
+        "$expr": { "$unknown_op" : ["test", "$test"]}
+      }
+    }
+  ],
+  "collection": "users",
+  "allowDiskUse":true,
+  "maxTimeMS":0,
+  "cursor":{}
+}

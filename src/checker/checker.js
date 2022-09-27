@@ -21,7 +21,7 @@ exports.checkIndexes = async (queries, indexes) => {
 
         // connect
         await client.connect();
-        console.log("Connected to DB", db_name);
+        console.log("* Connected to DB: ", db_name);
         const db = client.db(db_name);
 
         //Drop previous indexes

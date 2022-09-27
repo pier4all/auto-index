@@ -3,11 +3,16 @@
   "pipeline":[
           {
             "$match": {
-              "date": {
-                "$gte": "{$START_DATE}", 
-                "$lt":  "{$END_DATE}"
+              "$and": [
+                  {  
+                    "$expr": {"$gte": ["$date", 
+                      {"$toDate": "2020-07-01"}]}
+                  },
+                      {  
+                    "$expr": {"$lt": ["$date", 
+                      {"$toDate": "2020-08-01"}]}
+                  } ]
               }
-            }
           }, {
             "$lookup": {
               "from": "services", 

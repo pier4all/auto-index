@@ -3,7 +3,7 @@
   "pipeline":[
     {
       "$match": {
-        "_id.period": "{$PERIOD}" 
+        "_id.period": "2020-07" 
       }
     }, {
       "$lookup": {

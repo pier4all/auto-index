@@ -93,25 +93,10 @@ class Generator {
         }  else {
           // expressions { $expr: { $gt: [ "$spent" , "$budget" ] } }
           if (key === '$expr'){
-            let exprOp = Object.keys(elementDict[key])[0]
-            // Check if it is a comparison operator
-            // TODO: check other types of operators
-            if (COMPARISON_OPS.includes(exprOp)) {
-              let comparisonFields = elementDict[key][exprOp]
-              for (let compField of comparisonFields) {
-                if (String(compField).startsWith('$') && !String(compField).startsWith('$$')){
-                  indexKey[compField.replace('$', '')] = 1  
-                  // only add the first element
-                  break
-                }
-              }
-            } else if (LOGIC_OPS.includes(exprOp)) {
-              //deal with logical operator clauses
-              const logicIndex = this.processLogicalOperator(elementDict[key][exprOp])
-              Object.keys(logicIndex).forEach(function(field, pos) {
-                    indexKey[field] = 1          
-              }) 
-            }
+            let exprIndex =  this.processExprOperator(elementDict[key])
+            Object.keys(exprIndex).forEach(function(field, pos) {
+              indexKey[field] = 1          
+             })             
           }
         }
       }     
@@ -127,6 +112,28 @@ class Generator {
     } else {
       return undefined
     }
+  }
+
+  processExprOperator(elementExpr){
+    let exprIndex = {}
+    let exprOp = Object.keys(elementExpr)[0]
+    // Check if it is a comparison operator
+    // TODO: check other types of operators
+    if (COMPARISON_OPS.includes(exprOp)) {
+      let comparisonFields = elementExpr[exprOp]
+      for (let compField of comparisonFields) {
+        if (String(compField).startsWith('$') && !String(compField).startsWith('$$')){
+          exprIndex[compField.replace('$', '')] = 1  
+          // only add the first element
+          break
+        }
+      }
+      return exprIndex
+    } else if (LOGIC_OPS.includes(exprOp)) {
+      //deal with logical operator clauses
+      return this.processLogicalOperator(elementExpr[exprOp])
+    }
+    return exprIndex
   }
 
   processLogicalOperator(params) {
@@ -150,6 +157,11 @@ class Generator {
                 break
               }
             }  
+          } else if (param === '$expr'){
+            let exprIndex =  this.processExprOperator(logicParam[param])
+            Object.keys(exprIndex).forEach(function(field, pos) {
+              logicfields[field] = 1          
+             })             
           }
         }
       }
