@@ -9,10 +9,10 @@ const index1 = {"name":"test_index1","key":{"name":1},"collection":"test_collect
 const index1a = {"name":"test_index1a","key":{"name":1,"active":1},"collection":"test_collection1","operator": '$match', "order": 0, "options":{}} 
 const index1b = {"name":"test_index1b","key":{"name":1,"address":1},"collection":"test_collection1","operator": '$match', "order": 0, "options":{}} 
 
-const index2 = {"name":"test_index1","key":{"name":1},"collection":"test_collection2","operator": '$match', "order": 0, "options":{}} 
-const index2a = {"name":"test_index1a","key":{"name":1,"active":1},"collection":"test_collection2","operator": '$match', "order": 0, "options":{}} 
-const index2b = {"name":"test_index1b","key":{"name":1,"address":1},"collection":"test_collection2","operator": '$match', "order": 0, "options":{}} 
-
+const index2 = {"name":"test_index2","key":{"name":1},"collection":"test_collection2","operator": '$match', "order": 0, "options":{}} 
+const index2a = {"name":"test_index2a","key":{"name":1,"active":1},"collection":"test_collection2","operator": '$match', "order": 0, "options":{}} 
+const index2b = {"name":"test_index2b","key":{"name":1,"address":1},"collection":"test_collection2","operator": '$match', "order": 0, "options":{}} 
+const index2c = {"name":"test_index2c","key":{"_id":1,"address":1},"collection":"test_collection2","operator": '$match', "order": 0, "options":{}} 
 
 tap.test('check index redundancy against empty index list returns false', async (childTest) => {
   const cleaner = new Cleaner()
@@ -102,6 +102,34 @@ tap.test('redundant indexes are cleaned if minimize is true and collections are 
 
   const result = cleaner.clean(indexes)
   childTest.equal(result.length, 3)
+  childTest.end()
+})
+
+tap.test('test if isIdIndex returns true for an index containing _id ', async (childTest) => {
+  const cleaner = new Cleaner()
+  
+  const result = cleaner.isIdIndex(index2c)
+  childTest.equal(result, true)
+  childTest.end()
+})
+
+tap.test('test if isIdIndex returns false for an index not containing _id ', async (childTest) => {
+  const cleaner = new Cleaner()
+  
+  const result = cleaner.isIdIndex(index1b)
+  childTest.equal(result, false)
+  childTest.end()
+})
+
+tap.test('test if the index containing _id is cleaned out from the set', async (childTest) => {
+  const cleaner = new Cleaner()
+  
+  const indexes = [index2, index2a, index2b, index2c]
+
+  const result = cleaner.clean(indexes)
+  childTest.equal(result.length, 3)
+  childTest.equal(result.map(i => i.name).includes('test_index2c'), false)
+  
   childTest.end()
 })
 

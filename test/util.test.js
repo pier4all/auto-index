@@ -1,4 +1,7 @@
 const util = require('../src/util')
+const Index = require("../src/index")
+const fs = require('fs')
+
 
 // import tap test
 const tap = require('tap')
@@ -6,9 +9,12 @@ const tap = require('tap')
 // data
 const inputDir = "./test/data"
 
+//  temporary dir
+const tmp_dir = "./util_test_output_tmp"
+
 // test initialization
 tap.before(async function() { 
-
+  fs.mkdirSync(tmp_dir)
 })
 
 tap.test('get aggregations from directory', async (childTest) => {
@@ -73,8 +79,28 @@ tap.test('remove non-existing object from array by matching key-value pair', asy
   childTest.end()
 })
 
+tap.test('write indexes to file', async (childTest) => {
+  
+  const object_array = [
+    Index.fromJSON(JSON.stringify({"name":"test_index2","key":{"name":1},"collection":"test_collection2","operator": '$match', "order": 0, "options":{}})),
+    Index.fromJSON(JSON.stringify({"name":"test_index2a","key":{"name":1,"active":1},"collection":"test_collection2","operator": '$match', "order": 0, "options":{}})),
+    Index.fromJSON(JSON.stringify({"name":"test_index2b","key":{"name":1,"address":1},"collection":"test_collection2","operator": '$match', "order": 0, "options":{}})) 
+  ]
+  const result_array = util.writeIndexResults(object_array, tmp_dir)
+  childTest.equal(object_array.length, result_array.length)
+  childTest.equal(JSON.stringify(object_array[0].toMongoJSON()), JSON.stringify(result_array[0]))
+
+  let filesFound = fs.readdirSync(tmp_dir)
+  childTest.equal(filesFound.length, 1)
+
+  let contents = JSON.parse(fs.readFileSync(tmp_dir + '/' + filesFound[0]))
+  childTest.equal(JSON.stringify(object_array[0].toMongoJSON()), JSON.stringify(contents.indexes[0]))
+
+  childTest.end()
+})
+
 // test cleanup
 tap.teardown(async function() { 
-
+  fs.rmSync(tmp_dir, { recursive: true, force: true });
 })
   

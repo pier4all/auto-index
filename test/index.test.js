@@ -34,6 +34,24 @@ tap.test('export an empty index to json string', async (childTest) => {
     childTest.end()
 })
 
+tap.test('create an empty index from a json string', async (childTest) => {
+
+  const indexBlank = Index.fromJSON("{}") 
+
+  childTest.equal(JSON.stringify(indexBlank.toMongoJSON()), JSON.stringify(jsonBlank))
+  childTest.equal(indexBlank.operator, '')
+  childTest.equal(indexBlank.order, 0)
+  childTest.end()
+})
+
+tap.test('create an empty index from a json string', async (childTest) => {
+
+  const indexString = JSON.stringify({"name":"test_index2","key":{"name":1},"collection":"test_collection2","operator": '$match', "order": 0, "options":{}})
+  const indexFromJson = Index.fromJSON(indexString) 
+
+  childTest.equal(JSON.stringify(indexFromJson), indexString)
+  childTest.end()
+})
 
 // test cleanup
 tap.teardown(async function() { 

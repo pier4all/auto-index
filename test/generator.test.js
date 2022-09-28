@@ -35,10 +35,7 @@ const jsonMatchLogicalOp = JSON.stringify({ "aggregate": "test_logical_op", "col
                                                                               "$and": [ { "$lt": [ "$start", "{$END_DATE}" ] }, { "$gt": [ "$end", "{$START_DATE}" ] }
                                                                               ]
                                                                             }
-                                                                          ]
-                                                                        }
-                                                                      }
-                                                                    }]})
+                                                                          ]}}}]})
 const jsonMatchSortAliases = JSON.stringify({ "aggregate": "test1", "collection": "test_collection", "pipeline": [{"$addFields": {"age": "$o.age", "salary": "$o.payment"}}, {"$match": {"age": 35}}, {"$sort": {"salary": 1, "x": -1}}], "allowDiskUse":true})
 const jsonAggGroupAliases1 = JSON.stringify({ "aggregate": "test_group_alias1", "collection": "test_collection", "pipeline": [{"$addFields": {"age": "$o.age"}}, {"$group": {"_id": { "x" : "$age" },"y": { "$first" : "$y" }}}]})
 const jsonAggGroupAliases2 = JSON.stringify({ "aggregate": "test_group_alias2", "collection": "test_collection", "pipeline": [{"$addFields": {"age": "$o.age"}}, {"$sort": { "x" : 1, "age": 1}}, {"$group": {"_id": { "x" : "$x" },"y": { "$first" : "$age" }}}]})
@@ -48,9 +45,10 @@ const jsonMatchMultipleAliases1 = JSON.stringify({ "aggregate": "test_mult_alias
 const jsonMatchMultipleAliases2 = JSON.stringify({ "aggregate": "test_mult_aliases", "collection": "test_collection", "pipeline": [{"$project": {"salary": "$payment"}}, {"$project": {"age": "$o.age", "billed": 0}}, {"$addFields": {"years": "$age"}}, {"$match": {"years": 35, "salary": 5 }}], "allowDiskUse":true})
 const jsonMatchPartialAliases = JSON.stringify({ "aggregate": "test_part_aliases", "collection": "test_collection", "pipeline": [{ "$project" :{ "lines": "$edges", "color":1 } }, { "$addFields" :{ "color": "none",  "numedges": "$lines.count" } }, { "$match":{ "lines.size": 5, "numedges": {"$gt": 2},  "color": "none" }}], "allowDiskUse":true})
 
+const jsonComplexExpr = JSON.stringify({ "aggregate": "test_expr", "collection": "test_collection", "pipeline": [{ "$match":{"$expr": {"$eq": ["$username", "lucia.espona@fhnw.ch"]}}}], "allowDiskUse":true})
+const jsonLogicalComplexExpr = JSON.stringify({ "aggregate": "test_logical_expr", "collection": "test_collection", "pipeline": [{ "$match":{ "$and": [{ "$expr": {"$eq": ["$employee", "60a17c017c75ab7cd56da552"]}},{"$expr": {"$gte": ["$date", {"$toDate": "2020-07-13T00:00:00.000+00:00"}]}}]}}], "allowDiskUse":true})
 
-
-    // test initialization
+// test initialization
 tap.before(async function() { 
 
 })
@@ -418,6 +416,30 @@ tap.test('generate index for match stage with multiple aliases on subfields uses
 
   childTest.equal(indexes.length, 1)
   childTest.equal(JSON.stringify(indexes[0].key), JSON.stringify({"edges.size":1,"edges.count":1}))
+  childTest.end()
+})
+
+tap.test('generate index for match stage with complex expr', async (childTest) => {
+  const aggregation = Aggregation.fromJSON(jsonComplexExpr)
+   
+  const generator = new Generator()
+
+  const indexes = generator.generateIndexes(aggregation)
+
+  childTest.equal(indexes.length, 1)
+  childTest.equal(JSON.stringify(indexes[0].key), JSON.stringify({"username":1}))
+  childTest.end()
+})
+
+tap.test('generate index for match stage with logical op with complex expr', async (childTest) => {
+  const aggregation = Aggregation.fromJSON(jsonLogicalComplexExpr)
+   
+  const generator = new Generator()
+
+  const indexes = generator.generateIndexes(aggregation)
+
+  childTest.equal(indexes.length, 1)
+  childTest.equal(JSON.stringify(indexes[0].key), JSON.stringify({"employee":1,"date":1}))
   childTest.end()
 })
 

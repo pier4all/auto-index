@@ -55,14 +55,11 @@ exports.writeIndexResults = (array, ouptputDir) => {
   const indexFilePath = path.join(ouptputDir, indexFileName);
 
   let  mongoIndexes = []
-  let text = "["
 
   for (let index of array){
-    text += JSON.stringify(index.toMongoJSON(), null, 2)
-    text += ",\n"
     mongoIndexes.push(index.toMongoJSON())
   }
-  text += "]"
+  let text = JSON.stringify({"indexes": mongoIndexes} , null, 2)
 
   fs.appendFileSync(indexFilePath, text)
 
