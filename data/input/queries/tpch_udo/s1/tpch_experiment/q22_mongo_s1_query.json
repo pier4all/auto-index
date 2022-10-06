@@ -1,30 +1,12 @@
 {
-  "aggregate": "s1-tpch-q22-scale1",
+  "name": "s1-tpch-q22-scale1_query",
   "query":{
     "c_acctbal": {
       "$gt": 0.0
-    },
-    "cntrycode": {
-      "$in": [
-        "30",
-        "17",
-        "25",
-        "10",
-        "22",
-        "15",
-        "21"
-      ]
     }
   },
   "project": {
-    "c_acctbal": 1,
-    "cntrycode": {
-      "$substr": [
-        "$c_phone",
-        0,
-        2
-      ]
-    }
+    "c_acctbal": 1
   },
   "collection": "scale1",
   "allowDiskUse": true,

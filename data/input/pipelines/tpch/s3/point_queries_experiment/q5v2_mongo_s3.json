@@ -1,5 +1,5 @@
 {
-  "aggregate": "s3-tpch-q5v2-customer",
+  "aggregate": "s3-pqe-q5v2-customer",
   "collection": "customer",
   "pipeline": [
     {

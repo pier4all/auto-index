@@ -1,5 +1,5 @@
 {
-  "name": "s1-tpch-q3v1-scale1-query-part",
+  "name": "s1-tpch-q3v1-scale1_query",
   "query": {
     "c_mktsegment": "AUTOMOBILE"
   },
@@ -12,7 +12,7 @@
           "cond": {
             "$lt": [
               "$$o.o_orderdate",
-              "ISODate('1992-01-02T00:00:00Z')"
+              {"$toDate": "1992-01-02T00:00:00Z"}
             ]
           }
         }

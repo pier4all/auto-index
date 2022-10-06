@@ -8,7 +8,7 @@ const report_file_name = 'report_' + new Date().toISOString().split('T')[0] + '.
 const report = path.join(output_dir, report_file_name);
 if (!fs.existsSync(report)) {
   //print header if file does not exist
-  fs.appendFileSync(report, ["aggregation".padEnd(30), "index".padEnd(65), "collection".padEnd(15), "explain".padEnd(15), "index_stats".padEnd(15), "time_ms_exp".padEnd(15), "time_ms_stats".padEnd(15), "input_tag"].join('\t') + '\n')
+  fs.appendFileSync(report, ["aggregation".padEnd(30), "index".padEnd(65), "collection".padEnd(15), "explain".padEnd(15), "index_stats".padEnd(15), "time_ms_exp".padEnd(15), "time_ms_stats".padEnd(15), "input_tag".padEnd(10), "index_key"].join('\t') + '\n')
 }
 
 
@@ -84,9 +84,9 @@ function replace(obj, file) {
     return obj;
   }
 
-function appendReport(aggregation, index, collection, exp, index_usage, exp_duration, id_duration, input_tag) {
+function appendReport(aggregation, index, collection, exp, index_usage, exp_duration, id_duration, input_tag, index_key) {
   //console.log(aggregation, index, exp, index_usage)
-  fs.appendFileSync(report, [aggregation.padEnd(30), index.padEnd(65), String(collection).padEnd(15), String(exp).padEnd(15), String(index_usage).padEnd(15), String(exp_duration).padEnd(15),  String(id_duration).padEnd(15), input_tag ].join('\t') + '\n')
+  fs.appendFileSync(report, [aggregation.padEnd(30), index.padEnd(65), String(collection).padEnd(15), String(exp).padEnd(15), String(index_usage).padEnd(15), String(exp_duration).padEnd(15),  String(id_duration).padEnd(15), input_tag.padEnd(10), String(index_key) ].join('\t') + '\n')
 }
 
 function logTimer(start) {
@@ -98,8 +98,9 @@ function logTimer(start) {
 }
 
 module.exports = {
-    getAllQueries,
-    getAllIndexes,
+  getAllQueries,
+  getAllIndexes,
+  readFile,
     appendReport,
     logTimer
 }

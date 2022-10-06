@@ -49,6 +49,8 @@ class Query {
             pipeline.push({'$project': this.project})
         }
 
+        pipeline = Aggregation.replaceISODates(pipeline)
+
         return new Aggregation(this.name, pipeline, this.collection, this.options)
     }
 

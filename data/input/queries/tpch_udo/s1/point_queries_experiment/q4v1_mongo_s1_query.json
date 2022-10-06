@@ -1,5 +1,5 @@
 {
-  "name":"s1-pqe-q4v1_scale1-query",
+  "name":"s1-pqe-q4v1-scale1_query",
   "query":{
     "c_acctbal": {
       "$lt": -10

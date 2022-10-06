@@ -1,5 +1,5 @@
 {
-  "aggregate": "s3-tpch-q3v1-orders-lineitem",
+  "aggregate": "s3-pqe-q3v1-orders-lineitem",
   "collection": "orders-lineitem",
   "pipeline": [
     {

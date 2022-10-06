@@ -394,7 +394,7 @@ class Generator {
       if (!addedFields[alias] ) {
         for (let key of Object.keys(indexKey)){
           if (key.split('.')[0] === alias) {
-            console.log("\t ! Deleting ", alias, 'to', addedFields[alias])
+            console.log("\t ! Replacing alias ", alias, 'to', addedFields[alias])
             delete indexKey[key]  
           }
         }

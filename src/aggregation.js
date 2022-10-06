@@ -18,7 +18,7 @@ class Aggregation {
         const jsonObject = JSON.parse(jsonString)
 
         const name = jsonObject.aggregate || ""
-        const pipeline = jsonObject.pipeline || []
+        let pipeline = jsonObject.pipeline || []
 
         const collection = jsonObject.collection || undefined
         
@@ -27,8 +27,14 @@ class Aggregation {
             options[key] = jsonObject[key]
         });
 
+        pipeline = this.replaceISODates(pipeline)
+
+        return new Aggregation(name, pipeline, collection, options)
+    }
+
+    static replaceISODates(pipeline){
         // Check for ISODates (not compatible)
-        if (jsonString.includes("ISODate")) {
+        if (JSON.stringify(pipeline).includes("ISODate")) {
             try {
                 for (let stage of pipeline) {
                     if(JSON.stringify(stage).includes("ISODate")) {
@@ -53,12 +59,15 @@ class Aggregation {
 
             if (JSON.stringify(pipeline).includes("ISODate")) {
                 console.warn("Pipeline contains ISODate (not compatible) ", name)
+                console.log(JSON.stringify(pipeline,2))
+                throw 'fix the ISODate on pipeline ' +  name
             }
          }
-
-        return new Aggregation(name, pipeline, collection, options)
+         return pipeline
+        
     }
-
 }
+
+
 
 module.exports = Aggregation

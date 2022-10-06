@@ -6,7 +6,7 @@ exports.checkIndexes = async (queries, indexes) => {
     const {MongoClient} = require('mongodb');
     const client = new MongoClient(db_uri, {useUnifiedTopology: true});
     const {ObjectId} = require('mongodb');
-    const utils = require('./utils.js');
+    const utils = require('./util_checker.js');
     const index = require('./indexhandler.js');
 
 
@@ -37,6 +37,7 @@ exports.checkIndexes = async (queries, indexes) => {
             for (const id of indexes) {
 
                 const index_name = id["indexes"][0]["name"];
+                const index_key = id["indexes"][0]["key"];
                 console.log('\n - Creating index', index_name)
                 await index.createOne(db, id);
 
@@ -68,9 +69,9 @@ exports.checkIndexes = async (queries, indexes) => {
 
                 //Logging results in report file 
                 // console.log('REPORT', aggregation_name, index_name, index_collection.collectionName, exp_usage, index_usage, exp_duration, id_duration, aggregation_name.split('-')[0] )
-                utils.appendReport(aggregation_name, index_name, index_collection.collectionName, exp_usage, index_usage, exp_duration, id_duration, aggregation_name.split('-')[0] );
+                utils.appendReport(aggregation_name, index_name, index_collection.collectionName, exp_usage, index_usage, exp_duration, id_duration, aggregation_name.split('-')[0], JSON.stringify(index_key));
                 
-                index_summary[index_name] ={"explain": index_summary[index_name]["explain"] ? index_summary[index_name]["explain"] : exp_usage, "collection": index_collection.collectionName,
+                index_summary[index_name] ={"key": index_key, "explain": index_summary[index_name]["explain"] ? index_summary[index_name]["explain"] : exp_usage, "collection": index_collection.collectionName,
                                             "index_stats": index_summary[index_name]["index_stats"] ? index_summary[index_name]["index_stats"] : index_usage};
                 
                 await index.deleteAll(db);
@@ -80,7 +81,7 @@ exports.checkIndexes = async (queries, indexes) => {
         }
         console.log(index_summary)
         for (var index_name in index_summary) {
-            utils.appendReport("total", index_name,  index_summary[index_name]["collection"], index_summary[index_name]["explain"], index_summary[index_name]["index_stats"], 0, 0, queries[0].name.split('-').slice(0, -2).join('-'));
+            utils.appendReport("total", index_name,  index_summary[index_name]["collection"], index_summary[index_name]["explain"], index_summary[index_name]["index_stats"], 0, 0, queries[0].name.split('-').slice(0, -2).join('-'), JSON.stringify(index_summary[index_name]["key"]));
         }
     } finally {
         await client.close();

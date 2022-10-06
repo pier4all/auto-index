@@ -20,8 +20,20 @@
 # npm run start ./data/input/pipelines/tpch_udo/s3/point_queries_experiment
 # npm run start ./data/input/pipelines/tpch_udo/s3/tpch_experiment
 
+# ############ TPCH UDO QUERIES ###################
+npm run start ./data/input/queries/tpch_udo/s1/point_queries_experiment
+npm run start ./data/input/queries/tpch_udo/s1/tpch_experiment
+npm run start ./data/input/queries/tpch_udo/s2/point_queries_experiment
+npm run start ./data/input/queries/tpch_udo/s2/tpch_experiment
+npm run start ./data/input/queries/tpch_udo/s3/point_queries_experiment
+npm run start ./data/input/queries/tpch_udo/s3/tpch_experiment
+
 # ############ DATAGEN ###################
-npm run start ./data/input/pipelines/datagen
+# npm run start ./data/input/pipelines/datagen
+
+# ############ HR ###################
+# npm run start ./data/input/pipelines/hr/normalized
+# npm run start ./data/input/pipelines/hr/denormalized
 
 # npm run start ./data/input/pipelines/custom
 #   // // const inputQueries = ["./data/input/pipelines/custom"] //process.argv[1]
