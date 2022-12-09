@@ -2,10 +2,10 @@ var fs = require('fs');
 
 class Aggregation {
     constructor(name, pipeline, collection, options) {
-    this.name = name;
-    this.pipeline = pipeline;
-    this.collection = collection;
-    this.options = options;
+        this.name = name;
+        this.pipeline = pipeline;
+        this.collection = collection;
+        this.options = options;
     }
 
     static fromFile(path) {
@@ -47,7 +47,7 @@ class Aggregation {
                                         let dateObject = new Date(date_text)
                                         if (dateObject instanceof Date && !isNaN(dateObject)) {
                                             stage[field][operator][text] = dateObject
-                                            console.log( " * INFO: Fixed ISODate ", name, stage[field][operator][text])
+                                            console.log( " * INFO: Fixed ISODate ", stage[field][operator][text])
                                         }
                                     }
                                 }
@@ -58,9 +58,8 @@ class Aggregation {
             } catch { }
 
             if (JSON.stringify(pipeline).includes("ISODate")) {
-                console.warn("Pipeline contains ISODate (not compatible) ", name)
+                console.error("Pipeline contains ISODate (not compatible) ")
                 console.log(JSON.stringify(pipeline,2))
-                throw 'fix the ISODate on pipeline ' +  name
             }
          }
          return pipeline

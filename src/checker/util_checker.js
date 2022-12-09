@@ -8,7 +8,7 @@ const report_file_name = 'report_' + new Date().toISOString().split('T')[0] + '.
 const report = path.join(output_dir, report_file_name);
 if (!fs.existsSync(report)) {
   //print header if file does not exist
-  fs.appendFileSync(report, ["aggregation".padEnd(30), "index".padEnd(65), "collection".padEnd(15), "explain".padEnd(15), "index_stats".padEnd(15), "time_ms_exp".padEnd(15), "time_ms_stats".padEnd(15), "input_tag".padEnd(10), "index_key"].join('\t') + '\n')
+  fs.appendFileSync(report, ["aggregation".padEnd(30), "index".padEnd(65), "collection".padEnd(15), "explain".padEnd(15), "index_stats".padEnd(15), "time_ms_exp".padEnd(15), "time_ms_stats".padEnd(15), "time_ms_noindex".padEnd(15), "time_ms_index".padEnd(15), "input_tag".padEnd(10), "index_key"].join('\t') + '\n')
 }
 
 
@@ -84,9 +84,11 @@ function replace(obj, file) {
     return obj;
   }
 
-function appendReport(aggregation, index, collection, exp, index_usage, exp_duration, id_duration, input_tag, index_key) {
+function appendReport(aggregation, index, collection, exp, index_usage, exp_duration, id_duration, noindex_duration, index_duration, input_tag, index_key) {
   //console.log(aggregation, index, exp, index_usage)
-  fs.appendFileSync(report, [aggregation.padEnd(30), index.padEnd(65), String(collection).padEnd(15), String(exp).padEnd(15), String(index_usage).padEnd(15), String(exp_duration).padEnd(15),  String(id_duration).padEnd(15), input_tag.padEnd(10), String(index_key) ].join('\t') + '\n')
+  fs.appendFileSync(report, [aggregation.padEnd(30), index.padEnd(65), String(collection).padEnd(15), String(exp).padEnd(15), String(index_usage).padEnd(15), 
+                            String(exp_duration).padEnd(15),  String(id_duration).padEnd(15), String(noindex_duration).padEnd(15),  String(index_duration).padEnd(15), 
+                            input_tag.padEnd(10), String(index_key) ].join('\t') + '\n')
 }
 
 function logTimer(start) {
@@ -97,10 +99,44 @@ function logTimer(start) {
     return time;
 }
 
+async function getPerformance(db, queries, REP_MAX=5){
+
+  //cold run 
+  for (const query of queries) {
+    await db.collection(query["collection"]).aggregate(query["pipeline"]).toArray();
+  }
+
+
+  await db.setProfilingLevel("off"); 
+  try {
+    await db.collection("system.profile").drop(); 
+  } catch(e) {
+    console.warn('ERROR when dropping system.profile collection: ', e.codeName);
+  }
+  await db.setProfilingLevel("all"); 
+
+  for (const query of queries) {
+      for (let i = 0; i < REP_MAX; i++) {
+          await db.collection(query["collection"]).aggregate(query["pipeline"]).toArray();
+      }
+  }
+
+  let res = await db.collection("system.profile").find().toArray()
+  await db.setProfilingLevel("off"); 
+
+  let total_millis = 0
+  for (let op of res) {
+      total_millis += op.millis               
+  }
+
+  return(total_millis/REP_MAX)
+}
+
 module.exports = {
   getAllQueries,
   getAllIndexes,
   readFile,
     appendReport,
-    logTimer
+    logTimer,
+    getPerformance
 }

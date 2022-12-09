@@ -12,7 +12,7 @@
             "as": "l",
             "cond": {
               "$lte": ["$$l.l_shipdate", {"$toDate": 
-                      {"$subtract": [{"$toLong": {"$toDate": "1992-04-30T00:00:00Z"}}, 10281600000]}
+                      {"$subtract": [{"$toLong": {"$toDate": "1992-05-30T00:00:00Z"}}, 10281600000]}
               }]
             }
           }

@@ -1,5 +1,5 @@
 
-exports.checkIndexes = async (queries, indexes) => {
+exports.checkIndexes = async (queries, indexes, checked_combinations = [], index_summary = {}) => {
 
     const db_uri = process.env.DB_URI;
     const db_name = process.env.DB_NAME;
@@ -9,20 +9,20 @@ exports.checkIndexes = async (queries, indexes) => {
     const utils = require('./util_checker.js');
     const index = require('./indexhandler.js');
 
+    const checkPerformance = true
 
     //Connect to MongoDB Database
     try {
         // initilize summary
-        let index_summary = {}
-
         for (const id of indexes) { 
-            index_summary[id["indexes"][0]["name"]] = {"explain": false, "index_stats": false}
+            index_summary[id["indexes"][0]["name"]] = index_summary[id["indexes"][0]["name"]] || {"explain": false, "index_stats": false}
         }
 
         // connect
         await client.connect();
         console.log("* Connected to DB: ", db_name);
         const db = client.db(db_name);
+        const dbAdmin = client.db("admin");
 
         //Drop previous indexes
        await index.deleteAll(db);
@@ -35,7 +35,13 @@ exports.checkIndexes = async (queries, indexes) => {
 
             //Create one index
             for (const id of indexes) {
+                if (checked_combinations.includes(id["indexes"][0]["name"] + aggregation_name)) {
+                    continue
+                }
+                // just in case delete all indexes
+                await index.deleteAll(db);
 
+                // create index
                 const index_name = id["indexes"][0]["name"];
                 const index_key = id["indexes"][0]["key"];
                 console.log('\n - Creating index', index_name)
@@ -44,6 +50,8 @@ exports.checkIndexes = async (queries, indexes) => {
                 const query_collection = db.collection(query["collection"]);
                 const index_collection = db.collection(id["createIndexes"]);
                 const pipeline = query["pipeline"];
+                pipeline.push({'$limit': 10})
+
 
                  //Explain
                 console.log('   Checking explain ...')
@@ -53,6 +61,9 @@ exports.checkIndexes = async (queries, indexes) => {
                 const exp_usage = await parseExplain(exp, index_name);
                 console.log('\t ... explain result:', exp_usage)
                 // console.log("Explain: ", JSON.stringify(exp, null, 2));
+
+                // PAUSE
+                await new Promise(resolve => setTimeout(resolve, 1000));
 
                 console.log('   Checking stats ...')
                 const id_start = process.hrtime();
@@ -66,24 +77,68 @@ exports.checkIndexes = async (queries, indexes) => {
                 }
                 console.log('\t ... stats result:', index_usage)
                 // console.log("Index stats:", JSON.stringify(index_stats));
+               
+                let index_query_perf = 0
+                let noid_query_perf = 0
+
+                //check performance with index
+                console.log('   Checking index perf ...')
+                index_query_perf = await utils.getPerformance(db, [query])
+                console.log('                       ...', index_query_perf)
+
+                // delete indexes
+                await index.deleteAll(db);
+
+                // PAUSE
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // check performance without indexes
+                console.log('   Checking noindex perf ...')
+                noid_query_perf = await utils.getPerformance(db, [query])
+                console.log('                         ...', noid_query_perf)
 
                 //Logging results in report file 
                 // console.log('REPORT', aggregation_name, index_name, index_collection.collectionName, exp_usage, index_usage, exp_duration, id_duration, aggregation_name.split('-')[0] )
-                utils.appendReport(aggregation_name, index_name, index_collection.collectionName, exp_usage, index_usage, exp_duration, id_duration, aggregation_name.split('-')[0], JSON.stringify(index_key));
+                utils.appendReport(aggregation_name, index_name, index_collection.collectionName, exp_usage, index_usage, exp_duration, id_duration, noid_query_perf, index_query_perf, aggregation_name.split('-')[0], JSON.stringify(index_key));
                 
                 index_summary[index_name] ={"key": index_key, "explain": index_summary[index_name]["explain"] ? index_summary[index_name]["explain"] : exp_usage, "collection": index_collection.collectionName,
                                             "index_stats": index_summary[index_name]["index_stats"] ? index_summary[index_name]["index_stats"] : index_usage};
-                
-                await index.deleteAll(db);
-
+                checked_combinations += [index_name + aggregation_name]
             }
 
         }
         console.log(index_summary)
         for (var index_name in index_summary) {
-            utils.appendReport("total", index_name,  index_summary[index_name]["collection"], index_summary[index_name]["explain"], index_summary[index_name]["index_stats"], 0, 0, queries[0].name.split('-').slice(0, -2).join('-'), JSON.stringify(index_summary[index_name]["key"]));
+            utils.appendReport("total", index_name,  index_summary[index_name]["collection"], index_summary[index_name]["explain"], index_summary[index_name]["index_stats"], 0, 0, 0, 0, queries[0].name.split('-').slice(0, -2).join('-'), JSON.stringify(index_summary[index_name]["key"]));
         }
-    } finally {
+
+        if (checkPerformance) {
+            // performance check
+            console.log('\n * Checking full performance, total indexes:', indexes.length, ", total queries:", queries.length);
+            
+            // run queries without indexes     
+            await index.deleteAll(db);
+            
+            let total_millis_noindex = await utils.getPerformance(db, queries)
+            const all_noindex_perf = Number(total_millis_noindex).toFixed(3);
+
+            // create all indexes
+            for (const id of indexes) {
+                await index.createOne(db, id);
+            }
+
+            // PAUSE
+            await new Promise(resolve => setTimeout(resolve, 5000));
+
+            let total_millis_index = await utils.getPerformance(db, queries)
+            const all_index_perf = Number(total_millis_index).toFixed(3);
+
+            utils.appendReport("perf_total", "all", "all", "all", "all", 0, 0, all_noindex_perf, all_index_perf, queries[0].name.split('-').slice(0, -2).join('-'), "all");
+        }
+    
+    } catch (e) {
+        console.log('ERROR', e)
+    }finally {
         await client.close();
         console.log("Done!")
     }

@@ -13,9 +13,9 @@
   "author": "Lucia de Espona",
   "license": "ISC",
   "dependencies": {
-    "tap": "^15.1.6",
     "bson": "^4.6.4",
     "dotenv": "^16.0.1",
-    "mongodb": "^4.7.0"
+    "mongodb": "^4.7.0",
+    "tap": "^15.1.6"
   }
 }
