@@ -5,20 +5,24 @@ async function main() {
 
   console.log("DB_URI", process.env.DB_URI)
 
-  const util = require('./src/util')
   const { readFile } = require('./src/checker/util_checker')
   const { checkIndexes } = require('./src/checker/checker');
-  const Generator = require('./src/generator')
-  const Combinator = require('./src/combinator')
-  const Cleaner = require('./src/cleaner')
+
+  const util = require('mongodb-auto-index/source/util')
+  const Generator = require('mongodb-auto-index/source/generator')
+  const Combinator = require('mongodb-auto-index/source/combinator')
+  const Cleaner = require('mongodb-auto-index/source/cleaner')
   const path = require('path');
 
   // options
-  let minimize = false
+  let minimize = true
   console.log('minimize', minimize)
 
-  let onlyCheck = false
-  console.log('onlyCheck', onlyCheck)
+  let doGenerate = true
+  console.log('doGenerate', doGenerate)
+
+  let doCheck = false
+  console.log('doCheck', doCheck)
 
   const inputQueries = process.argv.slice(2)
 
@@ -31,7 +35,7 @@ async function main() {
     console.log(" - Reading input directory: " + inputDir)
 
     // TODO: add the collection to al input files and remove the default collection parameter
-    const dirQueries = util.getAggregationsFromDir(inputDir, "lineitems")
+    const dirQueries = util.getAggregationsFromDir(inputDir, "default")
     console.log("\t * Got " + dirQueries.length + " queries")
 
     queries = queries.concat(dirQueries)
@@ -41,10 +45,12 @@ async function main() {
 
   console.log(" - Read ", queries.length, " queries\n")
 
-  if (onlyCheck) {
+  if (!doGenerate) {
+
     const inputIndexesPath = "./data/input/indexes/index_udo.json"
     const indexes = readFile(path.join(__dirname, inputIndexesPath) )
     await checkIndexes(queries, indexes)
+
   } else {
  
     const generator = new Generator()
@@ -52,7 +58,6 @@ async function main() {
 
     let totalStepIndexes = 0
     let combinedIndexes = []
-
     
     for (const [key, index] of Object.entries(indexeResult)) {
       
@@ -81,8 +86,9 @@ async function main() {
     let indexResults = util.writeIndexResults(allIndexes, outputDirectory)
     // console.log(indexResults)
 
-    await checkIndexes(queries, indexResults)
-
+    if (doCheck) {
+      await checkIndexes(queries, indexResults)
+    }
   }
 }
 
