@@ -78,25 +78,25 @@ exports.checkIndexes = async (queries, indexes, checked_combinations = [], index
                 console.log('\t ... stats result:', index_usage)
                 // console.log("Index stats:", JSON.stringify(index_stats));
                
-                let index_query_perf = 0
-                let noid_query_perf = 0
+                let index_query_perf = undefined
+                let noid_query_perf = undefined
+                if (index_usage || exp_usage){
+                    //check performance with index
+                    console.log('   Checking index perf ...')
+                    index_query_perf = await utils.getPerformance(db, [query])
+                    console.log('                       ...', index_query_perf)
 
-                //check performance with index
-                console.log('   Checking index perf ...')
-                index_query_perf = await utils.getPerformance(db, [query])
-                console.log('                       ...', index_query_perf)
+                    // delete indexes
+                    await index.deleteAll(db);
 
-                // delete indexes
-                await index.deleteAll(db);
+                    // PAUSE
+                    await new Promise(resolve => setTimeout(resolve, 1000));
 
-                // PAUSE
-                await new Promise(resolve => setTimeout(resolve, 1000));
-
-                // check performance without indexes
-                console.log('   Checking noindex perf ...')
-                noid_query_perf = await utils.getPerformance(db, [query])
-                console.log('                         ...', noid_query_perf)
-
+                    // check performance without indexes
+                    console.log('   Checking noindex perf ...')
+                    noid_query_perf = await utils.getPerformance(db, [query])
+                    console.log('                         ...', noid_query_perf)
+                }
                 //Logging results in report file 
                 // console.log('REPORT', aggregation_name, index_name, index_collection.collectionName, exp_usage, index_usage, exp_duration, id_duration, aggregation_name.split('-')[0] )
                 utils.appendReport(aggregation_name, index_name, index_collection.collectionName, exp_usage, index_usage, exp_duration, id_duration, noid_query_perf, index_query_perf, aggregation_name.split('-')[0], JSON.stringify(index_key));

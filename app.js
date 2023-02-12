@@ -15,13 +15,13 @@ async function main() {
   const path = require('path');
 
   // options
-  let minimize = true
+  let minimize = false
   console.log('minimize', minimize)
 
   let doGenerate = true
   console.log('doGenerate', doGenerate)
 
-  let doCheck = false
+  let doCheck = true
   console.log('doCheck', doCheck)
 
   const inputQueries = process.argv.slice(2)
